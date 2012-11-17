@@ -1,0 +1,33 @@
+{
+  "name": "jscoverage",
+  "version": "0.3.0-alpha",
+  "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "dependencies" : {
+    "uglify-js" : "1.3.4"
+  },
+  "devDependencies" : {
+    "mocha" : "*",
+    "expect.js" : "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fishbar/jscoverage.git"
+  },
+  "keywords": [
+    "jscoverage",
+    "node",
+    "javascript",
+    "coverage",
+    "dev",
+    "tool"
+  ],
+  "author": "fish <zhengxinlin@gmail.com>, kate.sf <kate.sf@taobao.com>",
+  "contributors":[
+    { "name": "", "email": "" }
+  ],
+  "license": "MIT"
+}
