@@ -1,11 +1,14 @@
 var jsc = require("../index");
-require = jsc.mock(module);
-
-var abc = require('./abc',true);
-
-abc.abc();
-
-process.on('exit',function(){
-  jsc.coverage();
+var expect = require('expect.js');
+var abc = jsc.require(module, './abc');
+describe('test', function () {
+  it('should be ok', function () {
+    expect('123').to.be('123');
+    expect(abc.abc()).to.be(6);
+  });
 });
 
+process.on('exit', function () {
+  //jsc.coverage();
+  //jsc.coverageDetail();
+});
