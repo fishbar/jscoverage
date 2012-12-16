@@ -1,10 +1,10 @@
 {
   "name": "jscoverage",
-  "version": "0.3.0-alpha",
+  "version": "0.3.0-alpha1",
   "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
   "main": "index.js",
   "bin": { 
-    "jscoverage": "./bin/jscoverage.js"
+    "jscoverage": "./bin/jscoverage"
   },
   "scripts": {
     "test": "mocha test/test.js"

@@ -64,7 +64,6 @@ exports.processFile = function (source, dest, exclude, option) {
   var flag;
   var _exclude = [/^\./];
   var self = this;
-  console.log(arguments);
   if (!source || !dest) {
     throw new Error('source path or dest path needed!');
   }
@@ -130,10 +129,13 @@ exports.processFile = function (source, dest, exclude, option) {
  */
 exports.mock = function (mo) {
   var _req = Module.prototype.require;
-  for (var i in mo.require) {
-    _req[i] = mo.require[i];
+  function _mock(){
+    return _req.apply(mo, arguments);
   }
-  return _req;
+  for (var i in mo.require) {
+    _mock[i] = mo.require[i];
+  }
+  return _mock;
 };
 /**
  * jsc.require('module', flagjsc);
@@ -141,6 +143,9 @@ exports.mock = function (mo) {
  * @return {Module} module
  */
 exports.require = function (mo, file) {
+  if (!file) {
+    throw new Error('usage:jsc.require(mo, file); both param needed');
+  }
   return Module.prototype.require.apply(mo, [file, true]);
 };
 
