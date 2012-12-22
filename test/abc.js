@@ -8,9 +8,4 @@ function abc(){
   return tmp + c;
 }
 
-function uncovered(){
-  // TODO code here
-  var str = "this function is not covered";
-  return str;
-}
 exports.abc = abc;

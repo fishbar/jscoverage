@@ -17,13 +17,10 @@ var path = require('path');
 var jscoverage = require('./lib/jscoverage');
 var Module = require('module');
 
-//global variable. when using mocha, please register it.
-_$jscoverage =  undefined;
-_$jscoverage_cond = undefined;
 /**
  * inject function names
  */
-var _inject_functions = path.injectFunctions;
+var _inject_functions = patch.injectFunctions;
 /**
  * enableModuleCache
  *   using module cache or not which has jscoverage flag
@@ -38,8 +35,8 @@ exports.enableModuleCache = function (bool) {
  * @return {}
  */
 exports.config = function (obj) {
-  for (var i in obj.inject) {
-    _inject_functions[i] = obj.inject[i];
+  for (var i in obj) {
+    _inject_functions[i] = obj[i];
   }
 };
 /**
@@ -53,8 +50,8 @@ exports.process = jscoverage.process;
 /**
  * processFile, instrument file or hole dir
  * @sync
- * @param  {Path} source  Path
- * @param  {Path} dest    Path
+ * @param  {Path} source  absolute Path
+ * @param  {Path} dest    absolute Path
  * @param  {Array} exclude  exclude files ['test_abc.js', /^_svn/]
  * @param  {Object} option  [description]
  */
@@ -64,8 +61,9 @@ exports.processFile = function (source, dest, exclude, option) {
   var flag;
   var _exclude = [/^\./];
   var self = this;
-  if (!source || !dest) {
-    throw new Error('source path or dest path needed!');
+  var exp_abs = /^\//;
+  if (!source || !dest || !exp_abs.test(source) || !exp_abs.test(dest)) {
+    throw new Error('abs source path or abs dest path needed!');
   }
   if (exclude) {
     _exclude = _exclude.concat(exclude);
@@ -85,22 +83,13 @@ exports.processFile = function (source, dest, exclude, option) {
   }
 
   if (flag === 'file') { // process file
-    try {
-      content = fs.readFileSync(source).toString();
-    } catch (e) {
-      throw new Error('read source file error! ' + source + e.stack);
-    }
+    content = fs.readFileSync(source).toString();
     content = content.toString();
     content = this.process(source, content);
     mkdirSync(path.dirname(dest));
     fs.writeFileSync(dest, content);
   } else { // process dir
-    var nodes;
-    try {
-      nodes = fs.readdirSync(source);
-    } catch (e) {
-      throw new Error('read source dir error! ' + source + e.stack);
-    }
+    var nodes = fs.readdirSync(source);
     var tmpPath, tmpDest;
     var ignoreLen = _exclude.length;
     nodes.forEach(function (v) {
@@ -125,15 +114,16 @@ exports.processFile = function (source, dest, exclude, option) {
 /**
  * mock require module, instead of the node require().
  * @param  {Object} mo module object.
- * @return {Function} require : the new require function
+ * @param {Function} require the require function
+ * @return {Function} mocked require
  */
 exports.mock = function (mo) {
   var _req = Module.prototype.require;
-  function _mock(){
+  function _mock() {
     return _req.apply(mo, arguments);
   }
-  for (var i in mo.require) {
-    _mock[i] = mo.require[i];
+  for (var i in require) {
+    _mock[i] = require[i];
   }
   return _mock;
 };
@@ -147,30 +137,6 @@ exports.require = function (mo, file) {
     throw new Error('usage:jsc.require(mo, file); both param needed');
   }
   return Module.prototype.require.apply(mo, [file, true]);
-};
-
-/**
- * Require libs and ignore libs with jscoverage.
- * @param  {Object} mo, current module object.
- * @param  {Array} libs, need to coverage libs.
- * @param  {Array} ignoreLibs, no need to coverage libs.
- */
-exports.requireLibs = function (mo, libs, ignoreLibs) {
-  var _require = exports.require(mo);
-  var items = [];
-  var i, l;
-  ignoreLibs = ignoreLibs || [];
-  for (i = 0, l = ignoreLibs.length; i < l; i++) {
-    items.push([ignoreLibs[i], false]);
-  }
-  libs = libs || [];
-  for (i = 0, l = libs.length; i < l; i++) {
-    items.push([libs[i], true]);
-  }
-  for (i = 0, l = items.length; i < l; i++) {
-    var item = items[i];
-    requirePath(_require, item[0], item[1]);
-  }
 };
 
 /**
@@ -222,7 +188,7 @@ exports.coverageDetail = function () {
         lines[n] = 1;
         allcovered = false;
       } else {
-        lines[n] = '';
+        lines[n] = 0;
       }
     }
     if (allcovered) {
@@ -234,44 +200,62 @@ exports.coverageDetail = function () {
   }
 };
 
+function processLinesMask(lines) {
+  function processLeft3(arr, offset) {
+    var prev1 = offset - 1;
+    var prev2 = offset - 2;
+    var prev3 = offset - 3;
+    if (prev1 < 0) return;
+    arr[prev1] = arr[prev1] === 1 ? arr[prev1] : 2;
+    if (prev2 < 0) return;
+    arr[prev2] = arr[prev2] === 1 ? arr[prev2] : 2;
+    if (prev3 < 0) return;
+    arr[prev3] = arr[prev3] ? arr[prev3] : 3;
+  }
+  function processRight3(arr, offset) {
+    var len = arr.length;
+    var next1 = offset;
+    var next2 = offset + 1;
+    var next3 = offset + 2;
+    if (next1 >= len || arr[next1] === 1) return;
+    arr[next1] = arr[next1] ? arr[next1] : 2;
+    if (next2 >= len || arr[next2] === 1) return;
+    arr[next2] = arr[next2] ? arr[next2] : 2;
+    if (next3 >= len || arr[next3] === 1) return;
+    arr[next3] = arr[next3] ? arr[next3] : 3;
+  }
+  var offset = 0;
+  var now;
+  var prev = 0;
+  while (offset < lines.length) {
+    now = lines[offset];
+    now =  now !== 1 ? 0 : 1;
+    if (now !== prev) {
+      if (now === 1) {
+        processLeft3(lines, offset);
+      } else if (now === 0) {
+        processRight3(lines, offset);
+      }
+    }
+    prev = now;
+    offset ++;
+  }
+  return lines;
+}
 /**
  * printCoverageDetail
- * @param  {Array} lines [true]
+ * @param  {Array} lines [true] 1 means no coveraged
  * @return {}
  */
 function printCoverageDetail(lines, source) {
   var len = lines.length;
-  lines = lines.join(',');
-  //head
-  lines = lines.replace(/^([,]+)1/g, function (m0, m1) {
-    if (m1.length >= 3) {
-      return  m1.substr(3) + '3,2,2,1';
-    } else if (m1.length === 2) {
-      return '2,2,1';
-    } else {
-      return '2,1';
-    }
-  });
-  //  1,0,0,0,0,0,1
-  lines = lines.replace(/1[,]{3}(,*)[,]{3}1/g, function (m0, m1) {
-    return '1,2,2,3,' + m1 + '2,2,1';
-  });
-  // 1,0,0,0
-  lines = lines.replace(/1([,]+)$/g, function (m0, m1) {
-    if (m1.length >= 3) {
-      return '1,2,2,3' + m1.substr(3);
-    } else if (m1.length === 2) {
-      return '1,2,2';
-    } else {
-      return '1,2';
-    }
-  });
-  lines = lines.split(',');
+  lines = processLinesMask(lines);
+  //console.log(lines);
   for (var i = 0; i < len; i++) {
-    if (lines[i] !== '') {
-      if (lines[i] === '3') {
+    if (lines[i] !== 0) {
+      if (lines[i] === 3) {
         console.log('......');
-      } else if (lines[i] === '2') {
+      } else if (lines[i] === 2) {
         echo(i + 1, source[i], false);
       } else {
         echo(i + 1, source[i], true);
@@ -300,30 +284,10 @@ function colorful(str, type) {
 }
 
 /**
- * require the file in the path
- * @param  {Function} require : the require function
- * @param  {Path} p : path to be requre
- * @param  {Boolean} flagjsc : flagjsc
+ * like mkdir -p  /a/b/c
+ * @param  {Path} filepath
+ * @param  {Oct} mode     [description]
  */
-function requirePath(require, p, cov) {
-  var stat = fs.statSync(p);
-  if (stat.isFile()) {
-    // only require .js file.
-    if (path.extname(p) === '.js') {
-      require(p, cov);
-    }
-  } else if (stat.isDirectory()) {
-    var names = fs.readdirSync(p);
-    for (var i = 0, l = names.length; i < l; i++) {
-      var name = names[i];
-      if (name[0] === '.') {
-        continue;
-      }
-      requirePath(require, path.join(p, name), cov);
-    }
-  }
-}
-
 function mkdirSync(filepath, mode) {
   mode = mode ? mode : 0644;
   var paths = [];
@@ -346,7 +310,7 @@ function _checkDirExistSync(filepath) {
     if (stat.isDirectory()) {
       return true;
     } else {
-      throw new Error(filepath + ' Not a directory');
+      throw new Error(filepath + ' exist, and Not a directory');
     }
   }
   return false;

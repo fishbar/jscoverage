@@ -20,8 +20,8 @@ jscoverage sourcedir destdir --exclude a.js,b.js,c.js
 
 ### using as node module
 ```js
-var jsc = require('jscoverage').init(mo);
-var abc = jsc.require('testmodule.js', true);
+var jsc = require('jscoverage');
+var abc = jsc.require(module, 'testmodule.js');
 describe('test', function () {
     // TEST CODE HERE
 });

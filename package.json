@@ -15,7 +15,8 @@
   },
   "devDependencies" : {
     "mocha" : "*",
-    "expect.js" : "*"
+    "expect.js" : "*",
+    "xfs" : "*"
   },
   "repository": {
     "type": "git",
