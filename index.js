@@ -181,7 +181,7 @@ exports.coverageDetail = function () {
     source = tmp.source;
     allcovered = true;
     //console.log('[JSCOVERAGE]',file);
-    console.log('=============== uncovered code =====================');
+    console.log('[UNCOVERED CODE]', file);
     lines = [];
     for (var n = 0, len = source.length; n < len ; n++) {
       if (tmp[n] === 0) {
@@ -196,7 +196,6 @@ exports.coverageDetail = function () {
     } else {
       printCoverageDetail(lines, source);
     }
-    console.log("=== EOF ===");
   }
 };
 

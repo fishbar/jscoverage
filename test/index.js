@@ -1,4 +1,5 @@
 var jsc = require('../index');
+jsc.require(module, '../lib/jscoverage');
 var expect = require('expect.js');
 var index = jsc.require(module, '../index');
 var fs = require('xfs');
@@ -148,5 +149,5 @@ describe("index.js", function () {
 
 process.on('exit', function () {
   jsc.coverage();
-  jsc.coverageDetail();
+  //jsc.coverageDetail();
 });

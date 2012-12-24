@@ -3,3 +3,4 @@ function a(){
   var b = 2;
   return a+b;
 }
+exports.a = a;
