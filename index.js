@@ -250,14 +250,14 @@ function printCoverageDetail(lines, source) {
   var len = lines.length;
   lines = processLinesMask(lines);
   //console.log(lines);
-  for (var i = 0; i < len; i++) {
+  for (var i = 1; i < len; i++) {
     if (lines[i] !== 0) {
       if (lines[i] === 3) {
         console.log('......');
       } else if (lines[i] === 2) {
-        echo(i + 1, source[i], false);
+        echo(i, source[i - 1], false);
       } else {
-        echo(i + 1, source[i], true);
+        echo(i, source[i - 1], true);
       }
     }
   }
