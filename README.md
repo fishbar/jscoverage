@@ -50,7 +50,12 @@ using follow options, you can switch the functions
 
     --coverage   enable coverage action, default nocoverage
     --noinject   close inject action, default inject , sometimes you already using rewire module do the same thing
-    
+
+i.e when you run test code by mocha:
+```sh
+    mocha test/ --coverage  # open coverage instrument
+    mocha test/ --noinject  # close inject when you are using rewire
+```
 or you can also do in this way:
 ```js
 var jsc = require('jscoverage');
