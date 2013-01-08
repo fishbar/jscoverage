@@ -1,6 +1,7 @@
-var jsc = require('../index');
-jsc.require(module, '../lib/jscoverage');
 var expect = require('expect.js');
+var jsc = require('../index');
+jsc.enableModuleCache(false);
+jsc.require(module, '../lib/jscoverage');
 var index = jsc.require(module, '../index');
 var fs = require('xfs');
 var path = require('path');

@@ -8,8 +8,8 @@
  *   # using as a node module
  *
  *   # env switch
- *     --nocoverage   close coverage action
- *     --noinject     close inject action
+ *     --coverage   enable coverage action, default nocoverage
+ *     --noinject     close inject action, default inject
  */
 var patch = require('./lib/patch');
 var fs = require('fs');
@@ -148,6 +148,9 @@ exports.coverage = function () {
   var total;
   var touched;
   var n, len;
+  if (typeof _$jscoverage === 'undefined') {
+    return;
+  }
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];
@@ -174,6 +177,9 @@ exports.coverageDetail = function () {
   var source;
   var lines;
   var allcovered;
+  if (typeof _$jscoverage === 'undefined') {
+    return;
+  }
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];
