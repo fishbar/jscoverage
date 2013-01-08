@@ -17,8 +17,13 @@ jscoverage source.js dest.js
 jscoverage sourcedir destdir --exclude a.js,b.js,c.js
 # convert all files in sourcedir to destdir, exclude list will be ignored
 ```
+TODO, comming soon
+```sh
+jscoverage sourcedir destdir --no-instrument
+```
 
 ### using as node module
+
 ```js
 var jsc = require('jscoverage');
 var abc = jsc.require(module, 'testmodule.js');
@@ -35,14 +40,40 @@ describe('test', function () {
     // TEST CODE HERE
 });
 ```
-## mocha
+### env switchs
 
+jscoverage do not process coverage by default,
+because when we writting test case in the begining, case always fail,
+and we need to fix problems by check the error stack, finding the exact line where error happened
 
-### dependence
-  uglify-js
+using follow options, you can switch the functions
 
-## thanks
-  piuccio/node-coverage https://github.com/piuccio/node-coverage
+    --coverage   enable coverage action, default nocoverage
+    --noinject   close inject action, default inject , sometimes you already using rewire module do the same thing
+    
+or you can also do in this way:
+```js
+var jsc = require('jscoverage');
+jsc.enableCoverage(true);
+jsc.enableInject(false);
+```
+    
+### run with mocha
 
+output a html coverage reporter 
+```sh
+mocha -R html-cov test/test.js --coverage > coverage.html
+```
+
+### print coverage info in cli
+
+you can just print the coverage info in cli , like this:
+```js
+var jsc = require('jscoverage');
+process.on('exit', function () {
+  jsc.coverage(); // print summary info, cover percent
+  jsc.coverageDetail(); // print uncovered lines
+});
+```
 
 
