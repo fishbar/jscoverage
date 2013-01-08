@@ -82,4 +82,9 @@ process.on('exit', function () {
 });
 ```
 
+### mocha global leaks detect
+
+the follow object will be detected, all of them are create by jscoverage
+
+    _$jscoverage, _$jscoverage_done, _$jscoverage_init, _$jscoverage_cond, _$jscoverage_cond_done
 
