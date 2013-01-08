@@ -74,6 +74,7 @@ mocha -R html-cov test/test.js --coverage > coverage.html
 
 you can just print the coverage info in cli , like this:
 ```js
+// add the following code to you test file
 var jsc = require('jscoverage');
 process.on('exit', function () {
   jsc.coverage(); // print summary info, cover percent
