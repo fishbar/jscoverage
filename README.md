@@ -6,9 +6,10 @@ jscoverage tool, both node or javascript support
   
     npm install jscoverage -g
 
-running test
-
-    mocha -R list test/ --coverage
+### get source code
+    git clone git://github.com/fishbar/jscoverage.git
+    cd ./jscoverage
+    mocha -R list test --coverage
 
 ### using as cli command
 ```shell
@@ -90,5 +91,5 @@ process.on('exit', function () {
 
 the follow object will be detected, all of them are create by jscoverage
 
-    _$jscoverage, _$jscoverage_done, _$jscoverage_init, _$jscoverage_cond, _$jscoverage_cond_done
+    _$jscoverage, _$jscoverage_done, _$jscoverage_init, _$jscoverage_cond
 
