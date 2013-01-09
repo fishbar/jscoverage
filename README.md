@@ -6,6 +6,10 @@ jscoverage tool, both node or javascript support
   
     npm install jscoverage -g
 
+running test
+
+    mocha -R list test/ --coverage
+
 ### using as cli command
 ```shell
 jscoverage

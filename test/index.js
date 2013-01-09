@@ -1,11 +1,13 @@
-var expect = require('expect.js');
-var jsc = require('../index');
-jsc.enableModuleCache(false);
-jsc.require(module, '../lib/jscoverage');
-var index = jsc.require(module, '../index');
 var fs = require('xfs');
 var path = require('path');
-
+var expect = require('expect.js');
+var Module = require('module');
+var jsc = require('../index');
+jsc.enableModuleCache(false);
+var index = jsc.require(module, '../index');
+Module.prototype.__jsc_patch__ = false;
+jsc.require(module, '../lib/jscoverage');
+jsc.require(module, '../lib/patch');
 var abc = jsc.require(module, './abc');
 
 describe("index.js", function () {
@@ -19,6 +21,8 @@ describe("index.js", function () {
     it('should change patch.enableModuleCache', function () {
       index.enableModuleCache(true);
       expect(index._get('patch.enableModuleCache')).to.be.ok();
+      index.enableModuleCache(false);
+      expect(index._get('patch.enableModuleCache')).to.not.ok();
     });
   });
 
@@ -89,9 +93,9 @@ describe("index.js", function () {
       var req = index.mock(module, require);
       expect(req).to.be.a('function');
       expect(req).to.have.keys(['cache']);
-      var abc = req('./abc', true);
+      abc = req('./abc', true);
       expect(abc.abc()).to.be(6);
-      expect(abc._get).to.be.a('function');
+      expect(abc._reset).to.be.a('function');
     });
   });
 
@@ -99,7 +103,7 @@ describe("index.js", function () {
     it('should return an require function', function () {
       var abc = index.require(module, './abc');
       expect(abc.abc()).to.be(6);
-      expect(abc._get).to.be.a('function');
+      expect(abc._reset).to.be.a('function');
     });
     it('should return error when file is empty', function () {
       function _empty() {
@@ -145,6 +149,33 @@ describe("index.js", function () {
     index.coverageDetail();
     index.coverage();
     console.log = orig_log;
+  });
+  describe("test Module.extension['.js']", function () {
+    it('should return a function', function (done) {
+      var module = {
+        _compile: function (content, filename) {
+          var ff = new Function ('require', 'module', 'exports', '__dirname', '__filename', content + ';return module.exports;');
+          var module = {exports: {}};
+          var mo = ff(require, module, module.exports, __dirname, filename);
+          mo._replace('d', [
+            undefined,
+            null,
+            1,
+            NaN,
+            "string",
+            [1, 2, 3],
+            {"abc": [1, 2, 3]},
+            /a\\\\b/g
+          ]);
+          done();
+        }
+      };
+      Module._extensions['.js'](module, path.join(__dirname, './abc.js'), {
+        needjsc : true,
+        flagjsc : true,
+        needinject : true
+      });
+    });
   });
 });
 

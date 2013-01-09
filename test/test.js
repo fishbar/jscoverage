@@ -7,8 +7,3 @@ describe('test', function () {
     expect(abc.abc()).to.be(6);
   });
 });
-
-process.on('exit', function () {
-  jsc.coverage();
-  //jsc.coverageDetail();
-});

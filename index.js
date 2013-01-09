@@ -30,6 +30,16 @@ exports.enableModuleCache = function (bool) {
   patch.enableModuleCache = bool;
 };
 /**
+ * enableCoverage 
+ * @param {bool} bool default is false
+ */
+exports.enableCoverage = patch.enableCoverage;
+/**
+ * enableInject 
+ * @param {bool} bool default is true
+ */
+exports.enableInject = patch.enableInject;
+/**
  * config the inject function names
  * @param  {} obj  {get, replace, test, call, reset}
  * @return {}
