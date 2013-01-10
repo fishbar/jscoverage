@@ -6,9 +6,18 @@ var jsc = require('../index');
 jsc.enableModuleCache(false);
 var index = jsc.require(module, '../index');
 Module.prototype.__jsc_patch__ = false;
-jsc.require(module, '../lib/jscoverage');
+var jscoverage = jsc.require(module, '../lib/jscoverage');
 jsc.require(module, '../lib/patch');
 var abc = jsc.require(module, './abc');
+
+var func = jscoverage._get('jscFunctionBody').toString().split(/\n/);
+func.shift();
+func.pop();
+var wrapperGlobal = eval('(function(){ var global = {};' + func.join('\n') + ' return global;})');
+var wrapperWindow = eval('(function(){ var window = {}; var global = 123;' + func.join('\n') + ' return window;})');
+
+var _global = wrapperGlobal();
+var _window = wrapperWindow();
 
 describe("index.js", function () {
   describe("abc.abc()", function () {
@@ -150,6 +159,15 @@ describe("index.js", function () {
     index.coverage();
     console.log = orig_log;
   });
+  describe("test jscoverage wrapper function", function(){
+    it('shoud be ok', function(){
+      _global._$jscoverage_init(_global._$jscoverage, 'abc', [0,1,2]);
+      _global._$jscoverage_init(_global._$jscoverage_cond, 'abc', [0]);
+      _global._$jscoverage_done('abc', 0);
+      _global._$jscoverage_done('abc', 0, true);
+      expect(_global._$jscoverage['abc']).to.eql([1,0,0]);
+    });
+  });
   describe("test Module.extension['.js']", function () {
     it('should return a function', function (done) {
       var module = {
@@ -167,6 +185,14 @@ describe("index.js", function () {
             {"abc": [1, 2, 3]},
             /a\\\\b/g
           ]);
+          var res = mo._get('d');
+          expect(res[0]).to.be(undefined);
+          expect(res[1]).to.be(null);
+          expect(res[2]).to.be(1);
+          expect(isNaN(res[3])).to.be.ok();
+          expect(res[7].test('a\\\\bc')).to.be.ok();
+          mo._reset();
+          expect(mo._get('d')).to.be(undefined);
           done();
         }
       };
