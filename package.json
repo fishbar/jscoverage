@@ -1,6 +1,6 @@
 {
   "name": "jscoverage",
-  "version": "0.3.3",
+  "version": "0.3.5",
   "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
   "main": "index.js",
   "bin": { 

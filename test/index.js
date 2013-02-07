@@ -202,6 +202,34 @@ describe("index.js", function () {
         needinject : true
       });
     });
+    it('should return a function', function (done) {
+      var module = {
+        _compile: function (content, filename) {
+          var ff = new Function ('require', 'module', 'exports', '__dirname', '__filename', content + ';return module.exports;');
+          var module = {exports: {}};
+          var mo = ff(require, module, module.exports, __dirname, filename);
+          mo._replace('d', {});
+          var res = mo._get('d');
+          expect(res).to.be.eql({});
+          mo._reset();
+          expect(mo._get('d')).to.be(undefined);
+          done();
+        }
+      };
+      Module._extensions['.js'](module, path.join(__dirname, './abc.js'), {
+        needjsc : true,
+        flagjsc : true,
+        needinject : true
+      });
+    });
+  });
+  describe("test reset", function () {
+    it('should return a abc', function () {
+      abc._replace('reset.abc', 123);
+      expect(abc._get('reset.abc')).to.be(123);
+      abc._reset();
+      expect(abc._get('reset.abc')).to.be.a('function');
+    });
   });
 });
 

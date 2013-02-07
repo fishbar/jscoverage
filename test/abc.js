@@ -4,6 +4,10 @@ var b = 2;
 var c = 3;
 var d;
 
+var reset = {
+  abc:function () {}
+};
+
 function abc() {
   var tmp = a + b;
   // test require ok
