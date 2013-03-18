@@ -71,10 +71,12 @@ exports.processFile = function (source, dest, exclude, option) {
   var flag;
   var _exclude = [/^\./];
   var self = this;
+  /*
   var exp_abs = /^\//;
   if (!source || !dest || !exp_abs.test(source) || !exp_abs.test(dest)) {
     throw new Error('abs source path or abs dest path needed!');
   }
+  */
   if (exclude) {
     _exclude = _exclude.concat(exclude);
   }

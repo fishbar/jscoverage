@@ -81,13 +81,13 @@ describe("index.js", function () {
       function _empty() {
         index.processFile();
       }
-      expect(_empty).to.throwException(/abs source path or abs dest path needed!/);
+      expect(_empty).to.throwException(/source is not a file or dir/);
     });
     it('should throw error when source and dest not currect', function () {
       function _empty() {
         index.processFile('./abc', '.abc.cov');
       }
-      expect(_empty).to.throwException(/abs source path or abs dest path needed!/);
+      expect(_empty).to.throwException(/source is not a file or dir/);
     });
     it('should throw error when source and dest not currect', function () {
       function _empty() {

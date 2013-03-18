@@ -1,14 +1,10 @@
 #!/usr/bin/env node
 var argv = require('optimist').argv;
-var path = require('path');
 var jscoverage = require('../index');
-var fs = require('fs');
 var paths =  argv._;
 var source = paths[0];
 var dest = paths[1];
 var exclude = argv.exclude;
-var base = process.cwd();
-var path_exp = /^\//;
 
 if (!source) {
   helpInfo();
@@ -26,14 +22,6 @@ if (!dest) {
 if (exclude) {
   exclude = exclude.split(',');
 }
-
-if (!path_exp.test(source)) {
-  source = path.join(base, source);
-}
-if (!path_exp.test(dest)) {
-  dest = path.join(base, dest);
-}
-
 
 jscoverage.processFile(source, dest, exclude, {});
 
