@@ -95,11 +95,18 @@ exports.processFile = function (source, dest, exclude, option) {
   }
 
   if (flag === 'file') { // process file
-    content = fs.readFileSync(source).toString();
-    content = content.toString();
-    content = this.process(source, content);
     mkdirSync(path.dirname(dest));
-    fs.writeFileSync(dest, content);
+    var extname = path.extname(source);
+    if (extname && extname !== '.js') {
+      // if it is not a js file, copy it
+      content = fs.readFileSync(source);
+      fs.writeFileSync(dest, content);
+    } else {
+      content = fs.readFileSync(source).toString();
+      content = content.toString();
+      content = this.process(source, content);
+      fs.writeFileSync(dest, content);
+    }
   } else { // process dir
     var nodes = fs.readdirSync(source);
     var tmpPath, tmpDest;
