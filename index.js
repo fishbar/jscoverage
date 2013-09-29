@@ -161,12 +161,13 @@ exports.require = function (mo, file) {
 /**
  * sum the coverage rate
  */
-exports.coverage = function () {
+exports.coverageStats = function () {
   var file;
   var tmp;
   var total;
   var touched;
   var n, len;
+  var stats = {};
   if (typeof _$jscoverage === 'undefined') {
     return;
   }
@@ -182,12 +183,20 @@ exports.coverage = function () {
           touched ++;
       }
     }
-    console.log(
-      "[JSCOVERAGE] " +
-      file + ":" +
-      (total ? (((touched / total) * 100).toFixed(2) + '%') : "Not prepared!!!")
-    );
+    stats[file] = {
+        total: total,
+        touched: touched,
+        percent: total ? ((touched / total) * 100).toFixed(2) + '%' : "Not prepared!!!"
+    };
   }
+  return stats;
+};
+
+exports.coverage = function () {
+    var stats = exports.coverageStats();
+    Object.keys(stats).forEach(function (file) {
+        console.log("[JSCOVERAGE] " + file + ":" + stats[file].percent);
+    });
 };
 
 exports.coverageDetail = function () {
@@ -223,6 +232,33 @@ exports.coverageDetail = function () {
     }
   }
 };
+
+exports.getLCOV = function () {
+  var tmp;
+  var total;
+  var touched;
+  var n, len;
+  var lcov = "";
+  if (typeof _$jscoverage === 'undefined') {
+    return;
+  }
+  Object.keys(_$jscoverage).forEach(function (file) {
+    lcov += "SF:" + file + "\n";
+    tmp = _$jscoverage[file];
+    if (typeof tmp === 'function' || tmp.length === undefined) return;
+    total = touched = 0;
+    for (n = 0, len = tmp.length; n < len; n++) {
+      if (tmp[n] !== undefined) {
+        lcov += "DA:" + n + "," + tmp[n] + "\n";
+        total ++; 
+        if (tmp[n] > 0) touched++; 
+      }
+    }
+    lcov += "end_of_record\n";
+  });
+  return lcov;
+};
+
 
 function processLinesMask(lines) {
   function processLeft3(arr, offset) {
