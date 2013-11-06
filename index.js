@@ -97,7 +97,7 @@ exports.processFile = function (source, dest, exclude, option) {
   if (flag === 'file') { // process file
     mkdirSync(path.dirname(dest));
     var extname = path.extname(source);
-    if (extname && extname !== '.js') {
+    if (extname !== '.js') {
       // if it is not a js file, copy it
       content = fs.readFileSync(source);
       fs.writeFileSync(dest, content);
