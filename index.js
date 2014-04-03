@@ -1,3 +1,9 @@
+/*!
+ * jscoverage: index.js
+ * Authors  : fish <zhengxinlin@gmail.com> (https://github.com/fishbar)
+ * Create   : 2014-04-03 15:20:13
+ * CopyRight 2014 (c) Fish And Other Contributors
+ */
 /**
  * Jscoverage
  * @author kate.sf@taobao.com, zhengxinlin@gmail.com, fengmk2@gmail.com
@@ -12,39 +18,86 @@
  *     --noinject     close inject action, default inject
  */
 var patch = require('./lib/patch');
-var fs = require('fs');
+var fs = require('xfs');
 var path = require('path');
 var jscoverage = require('./lib/jscoverage');
 var Module = require('module');
 
+var argv = require('optimist').argv;
+
+var cmd = argv['$0'];
+var MODE_MOCHA = false;
+if (/mocha/.test(cmd)) {
+  MODE_MOCHA = true;
+}
+
+if (MODE_MOCHA) {
+  prepareMocha();
+}
 /**
- * inject function names
+ * prepare env for mocha test
  */
-var _inject_functions = patch.injectFunctions;
+function prepareMocha() {
+  var covIgnore = argv.covignore;
+  var cwd = process.cwd();
+  process.nextTick(function () {
+    try {
+      after(function () {
+        if (argv.covsummary) {
+          exports.coverage(true);
+        }
+        if (argv.covdetail) {
+          exports.coverageDetail();
+        }
+      });
+    } catch (e) {
+
+    }
+  });
+  if (argv.covinject) {
+    patch.enableInject(true);
+  }
+  //TODO load default project .covignore file
+  if (!covIgnore) {
+    return;
+  }
+  try {
+    covIgnore = fs.readFileSync(covIgnore).toString().split(/\r?\n/g);
+  } catch (e) {
+    throw new Error('jscoverage loading covIgnore file error:' + covIgnore);
+  }
+  covIgnore.forEach(function (v, i, a) {
+    if (v.indexOf('/') === 0) {
+      v = '^' + cwd + v;
+    } else {
+      v = '^' + cwd + '/' + v;
+    }
+    a[i] = new RegExp(v.replace(/\./g, '\\.').replace(/\*/g, '.*'));
+  });
+
+  patch.setCovIgnore(covIgnore);
+}
+
 /**
- * enableModuleCache
- *   using module cache or not which has jscoverage flag
- * @param  {Boolean} bool
- */
-exports.enableModuleCache = function (bool) {
-  patch.enableModuleCache = bool;
-};
-/**
- * enableCoverage 
- * @param {bool} bool default is false
- */
-exports.enableCoverage = patch.enableCoverage;
-/**
- * enableInject 
- * @param {bool} bool default is true
+ * enableInject description
+ * @param {Boolean} true or false
  */
 exports.enableInject = patch.enableInject;
 /**
  * config the inject function names
- * @param  {} obj  {get, replace, test, call, reset}
- * @return {}
+ * @param  {Object} obj  {get, replace, call, reset}
+ * @example
+ *
+ *  jsc.config({get:'$get', replace:'$replace'});
+ *
+ *  =====================
+ *
+ *  testMod = require('testmodule');
+ *  testMod.$get('name');
+ *  testMod.$replace('name', obj);
  */
 exports.config = function (obj) {
+  var _inject_functions = patch.injectFunctions;
   for (var i in obj) {
     _inject_functions[i] = obj[i];
   }
@@ -95,7 +148,7 @@ exports.processFile = function (source, dest, exclude, option) {
   }
 
   if (flag === 'file') { // process file
-    mkdirSync(path.dirname(dest));
+    fs.sync().mkdir(path.dirname(dest));
     var extname = path.extname(source);
     if (extname && extname !== '.js') {
       // if it is not a js file, copy it
@@ -130,36 +183,10 @@ exports.processFile = function (source, dest, exclude, option) {
   }
 };
 
-/**
- * mock require module, instead of the node require().
- * @param  {Object} mo module object.
- * @param {Function} require the require function
- * @return {Function} mocked require
- */
-exports.mock = function (mo) {
-  var _req = Module.prototype.require;
-  function _mock() {
-    return _req.apply(mo, arguments);
-  }
-  for (var i in require) {
-    _mock[i] = require[i];
-  }
-  return _mock;
-};
-/**
- * jsc.require('module', flagjsc);
- * @param  {Path} file : module path
- * @return {Module} module
- */
-exports.require = function (mo, file) {
-  if (!file) {
-    throw new Error('usage:jsc.require(mo, file); both param needed');
-  }
-  return Module.prototype.require.apply(mo, [file, true]);
-};
 
 /**
  * sum the coverage rate
+ * @public
  */
 exports.coverageStats = function () {
   var file;
@@ -174,29 +201,44 @@ exports.coverageStats = function () {
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];
-    if (typeof tmp === 'function' || tmp.length === undefined) continue;
+    if (typeof tmp === 'function' || tmp.length === undefined) {
+      continue;
+    }
     total = touched = 0;
     for (n = 0, len = tmp.length; n < len; n++) {
       if (tmp[n] !== undefined) {
         total ++;
-        if (tmp[n] > 0)
+        if (tmp[n] > 0) {
           touched ++;
+        }
       }
     }
     stats[file] = {
         total: total,
         touched: touched,
-        percent: total ? ((touched / total) * 100).toFixed(2) + '%' : "Not prepared!!!"
+        percent: total ? ((touched / total) * 100).toFixed(2) + '%' : 'Not prepared!!!'
     };
   }
   return stats;
 };
-
-exports.coverage = function () {
-    var stats = exports.coverageStats();
-    Object.keys(stats).forEach(function (file) {
-        console.log("[JSCOVERAGE] " + file + ":" + stats[file].percent);
-    });
+/**
+ * output coverage info
+ * @public
+ * @return {Array} [description]
+ */
+exports.coverage = function (print) {
+  var stats = exports.coverageStats();
+  var arr = [];
+  if (!stats) {
+    return arr;
+  }
+  Object.keys(stats).forEach(function (file) {
+    arr.push('[JSCOVERAGE] ' + file + ':' + stats[file].percent);
+  });
+  if (print) {
+    console.log(arr.join('\n'));
+  }
+  return arr;
 };
 
 exports.coverageDetail = function () {
@@ -211,7 +253,9 @@ exports.coverageDetail = function () {
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];
-    if (typeof tmp === 'function' || tmp.length === undefined) continue;
+    if (typeof tmp === 'function' || tmp.length === undefined) {
+      continue;
+    }
     source = tmp.source;
     allcovered = true;
     //console.log('[JSCOVERAGE]',file);
@@ -226,7 +270,7 @@ exports.coverageDetail = function () {
       }
     }
     if (allcovered) {
-      console.log(colorful("\t100% covered", "GREEN"));
+      console.log(colorful('\t100% covered', 'GREEN'));
     } else {
       printCoverageDetail(lines, source);
     }
@@ -238,23 +282,27 @@ exports.getLCOV = function () {
   var total;
   var touched;
   var n, len;
-  var lcov = "";
+  var lcov = '';
   if (typeof _$jscoverage === 'undefined') {
     return;
   }
   Object.keys(_$jscoverage).forEach(function (file) {
-    lcov += "SF:" + file + "\n";
+    lcov += 'SF:' + file + '\n';
     tmp = _$jscoverage[file];
-    if (typeof tmp === 'function' || tmp.length === undefined) return;
+    if (typeof tmp === 'function' || tmp.length === undefined) {
+      return;
+    }
     total = touched = 0;
     for (n = 0, len = tmp.length; n < len; n++) {
       if (tmp[n] !== undefined) {
-        lcov += "DA:" + n + "," + tmp[n] + "\n";
+        lcov += 'DA:' + n + ',' + tmp[n] + '\n';
         total ++; 
-        if (tmp[n] > 0) touched++; 
+        if (tmp[n] > 0) {
+          touched++;
+        } 
       }
     }
-    lcov += "end_of_record\n";
+    lcov += 'end_of_record\n';
   });
   return lcov;
 };
@@ -265,11 +313,17 @@ function processLinesMask(lines) {
     var prev1 = offset - 1;
     var prev2 = offset - 2;
     var prev3 = offset - 3;
-    if (prev1 < 0) return;
+    if (prev1 < 0) {
+      return;
+    }
     arr[prev1] = arr[prev1] === 1 ? arr[prev1] : 2;
-    if (prev2 < 0) return;
+    if (prev2 < 0) {
+      return;
+    }
     arr[prev2] = arr[prev2] === 1 ? arr[prev2] : 2;
-    if (prev3 < 0) return;
+    if (prev3 < 0) {
+      return;
+    }
     arr[prev3] = arr[prev3] ? arr[prev3] : 3;
   }
   function processRight3(arr, offset) {
@@ -277,11 +331,17 @@ function processLinesMask(lines) {
     var next1 = offset;
     var next2 = offset + 1;
     var next3 = offset + 2;
-    if (next1 >= len || arr[next1] === 1) return;
+    if (next1 >= len || arr[next1] === 1) {
+      return;
+    }
     arr[next1] = arr[next1] ? arr[next1] : 2;
-    if (next2 >= len || arr[next2] === 1) return;
+    if (next2 >= len || arr[next2] === 1) {
+      return;
+    }
     arr[next2] = arr[next2] ? arr[next2] : 2;
-    if (next3 >= len || arr[next3] === 1) return;
+    if (next3 >= len || arr[next3] === 1) {
+      return;
+    }
     arr[next3] = arr[next3] ? arr[next3] : 3;
   }
   var offset = 0;
@@ -335,43 +395,10 @@ function printCoverageDetail(lines, source) {
 function colorful(str, type) {
   var head = '\x1B[', foot = '\x1B[0m';
   var color = {
-    "LINENUM" : 36,
-    "GREEN"  : 32,
-    "YELLOW"  : 33,
-    "RED" : 31
+    LINENUM : 36,
+    GREEN  : 32,
+    YELLOW  : 33,
+    RED : 31
   };
   return head + color[type] + 'm' + str + foot;
-}
-
-/**
- * like mkdir -p  /a/b/c
- * @param  {Path} filepath
- * @param  {Oct} mode     [description]
- */
-function mkdirSync(filepath, mode) {
-  mode = mode ? mode : 0644;
-  var paths = [];
-  var exist = _checkDirExistSync(filepath);
-  while (!exist) {
-    paths.push(filepath);
-    filepath = path.dirname(filepath);
-    exist = _checkDirExistSync(filepath);
-  }
-  for (var n = paths.length - 1; n >= 0 ; n--) {
-    fs.mkdirSync(paths[n]);
-  }
-  return true;
-}
-function _checkDirExistSync(filepath) {
-  var exist = fs.existsSync(filepath);
-  var stat;
-  if (exist) {
-    stat = fs.statSync(filepath);
-    if (stat.isDirectory()) {
-      return true;
-    } else {
-      throw new Error(filepath + ' exist, and Not a directory');
-    }
-  }
-  return false;
 }
