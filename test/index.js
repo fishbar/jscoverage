@@ -8,51 +8,18 @@ var fs = require('xfs');
 var path = require('path');
 var expect = require('expect.js');
 var Module = require('module');
-var jsc = require('../index');
-var index = jsc.require(module, '../index');
-Module.prototype.__jsc_patch__ = false;
-var jscoverage = jsc.require(module, '../lib/jscoverage');
-jsc.require(module, '../lib/patch');
-var abc = jsc.require(module, './abc');
+var index = require('../index');
 
-var func = jscoverage._get('jscFunctionBody').toString().split(/\n/);
-func.shift();
-func.pop();
-var wrapperGlobal = eval('(function(){ var global = {};' + func.join('\n') + ' return global;})');
-var wrapperWindow = eval('(function(){ var window = {}; var global = 123;' + func.join('\n') + ' return window;})');
+index.config({
+  get: '_get',
+  call: '$$call',
+  replace: '_replace',
+  reset: '_reset'
+});
 
-var _global = wrapperGlobal();
-var _window = wrapperWindow();
+var abc = require('./abc');
 
 describe("index.js", function () {
-  describe("abc.abc()", function () {
-    it('should be ok', function () {
-      expect('123').to.be('123');
-      expect(abc.abc()).to.be(6);
-    });
-  });
-  describe("exports.enableModuleCache", function () {
-    it('should change patch.enableModuleCache', function () {
-      index.enableModuleCache(true);
-      expect(index._get('patch.enableModuleCache')).to.be.ok();
-      index.enableModuleCache(false);
-      expect(index._get('patch.enableModuleCache')).to.not.ok();
-    });
-  });
-
-  describe("exports.config", function () {
-    it('should change patch.injectFunctions', function () {
-      index.config({
-        get: '__get',
-        replace : '$$replace'
-      });
-      var cfg = index._get('patch.injectFunctions');
-      expect(cfg.get).to.be('__get');
-      expect(cfg.replace).to.be('$$replace');
-      expect(cfg.reset).to.be('_reset');
-    });
-  });
-
   describe("exports.processFile", function () {
     it('should return an jsc convert file', function () {
       var source = path.join(__dirname, './abc.js');
@@ -73,7 +40,7 @@ describe("index.js", function () {
         done();
       });
     });
-    it('should egnore exclude', function (done) {
+    it('should ignore exclude', function (done) {
       var source = path.join(__dirname, './dir');
       var dest = path.join(__dirname, './dir-cov');
       index.processFile(source, dest, ['a2', /\.md$/i]);
@@ -83,10 +50,11 @@ describe("index.js", function () {
       });
     });
     it('should throw error when source and dest not currect', function () {
-      function _empty() {
+      try {
         index.processFile();
+      } catch (e) {
+        expect(e.message).to.match(/source is not a file or dir/);
       }
-      expect(_empty).to.throwException(/source is not a file or dir/);
     });
     it('should throw error when source and dest not currect', function () {
       function _empty() {
@@ -102,32 +70,7 @@ describe("index.js", function () {
     });
   });
 
-  describe("exports.mock", function () {
-    it('should return an require function', function () {
-      var req = index.mock(module, require);
-      expect(req).to.be.a('function');
-      expect(req).to.have.keys(['cache']);
-      abc = req('./abc', true);
-      expect(abc.abc()).to.be(6);
-      expect(abc._reset).to.be.a('function');
-    });
-  });
-
-  describe("exports.require", function () {
-    it('should return an require function', function () {
-      var abc = index.require(module, './abc');
-      expect(abc.abc()).to.be(6);
-      expect(abc._reset).to.be.a('function');
-    });
-    it('should return error when file is empty', function () {
-      function _empty() {
-        index.require(module);
-      }
-      expect(_empty).to.throwException(/usage:jsc.require/);
-    });
-  });
-
-  describe("exports.processLinesMask", function () {
+  describe('exports.processLinesMask', function () {
     it('should be ok when test1', function () {
       var process = index._get('processLinesMask');
       var input  = [0, 0, 0, 1, 1, 0, 0, 1, 0, 0];
@@ -154,7 +97,7 @@ describe("index.js", function () {
     });
   });
 
-  describe("exports.processLinesMask", function () {
+  describe('exports.processLinesMask', function () {
     var orig_log = console.log;
     var msg = [];
     console.log = function (message) {
@@ -164,16 +107,8 @@ describe("index.js", function () {
     index.coverage();
     console.log = orig_log;
   });
-  describe("test jscoverage wrapper function", function(){
-    it('shoud be ok', function(){
-      _global._$jscoverage_init(_global._$jscoverage, 'abc', [0,1,2]);
-      _global._$jscoverage_init(_global._$jscoverage_cond, 'abc', [0]);
-      _global._$jscoverage_done('abc', 0);
-      _global._$jscoverage_done('abc', 0, true);
-      expect(_global._$jscoverage['abc']).to.eql([1,0,0]);
-    });
-  });
-  describe("test Module.extension['.js']", function () {
+
+  describe('test Module.extension[".js"]', function () {
     it('should return a function', function (done) {
       var module = {
         _compile: function (content, filename) {
@@ -185,9 +120,9 @@ describe("index.js", function () {
             null,
             1,
             NaN,
-            "string",
+            'string',
             [1, 2, 3],
-            {"abc": [1, 2, 3]},
+            {'abc': [1, 2, 3]},
             /a\\\\b/g
           ]);
           var res = mo._get('d');
@@ -239,6 +174,5 @@ describe("index.js", function () {
 });
 
 process.on('exit', function () {
-  jsc.coverage();
   //jsc.coverageDetail();
 });

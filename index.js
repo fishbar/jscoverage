@@ -3,30 +3,15 @@
  * Authors  : fish <zhengxinlin@gmail.com> (https://github.com/fishbar)
  * Create   : 2014-04-03 15:20:13
  * CopyRight 2014 (c) Fish And Other Contributors
+ *
  */
-/**
- * Jscoverage
- * @author kate.sf@taobao.com, zhengxinlin@gmail.com, fengmk2@gmail.com
- *
- * @usage
- *   # cli command
- *
- *   # using as a node module
- *
- *   # env switch
- *     --coverage   enable coverage action, default nocoverage
- *     --noinject     close inject action, default inject
- */
-var patch = require('./lib/patch');
 var fs = require('xfs');
 var path = require('path');
-var jscoverage = require('./lib/jscoverage');
-var Module = require('module');
-
 var argv = require('optimist').argv;
-
+var patch = require('./lib/patch');
 var cmd = argv['$0'];
 var MODE_MOCHA = false;
+var FLAG_PRINT = false;
 if (/mocha/.test(cmd)) {
   MODE_MOCHA = true;
 }
@@ -40,9 +25,17 @@ if (MODE_MOCHA) {
 function prepareMocha() {
   var covIgnore = argv.covignore;
   var cwd = process.cwd();
+  /**
+   * add after hook
+   * @return {[type]} [description]
+   */
   process.nextTick(function () {
     try {
       after(function () {
+        if (FLAG_PRINT) {
+          return;
+        }
+        FLAG_PRINT = true;
         if (argv.covsummary) {
           exports.coverage(true);
         }
@@ -57,9 +50,13 @@ function prepareMocha() {
   if (argv.covinject) {
     patch.enableInject(true);
   }
-  //TODO load default project .covignore file
   if (!covIgnore) {
-    return;
+    try {
+      var stat = fs.statSync('.covignore');
+      stat && (covIgnore = '.covignore');
+    } catch (e) {
+      return;
+    }
   }
   try {
     covIgnore = fs.readFileSync(covIgnore).toString().split(/\r?\n/g);
@@ -69,8 +66,6 @@ function prepareMocha() {
   covIgnore.forEach(function (v, i, a) {
     if (v.indexOf('/') === 0) {
       v = '^' + cwd + v;
-    } else {
-      v = '^' + cwd + '/' + v;
     }
     a[i] = new RegExp(v.replace(/\./g, '\\.').replace(/\*/g, '.*'));
   });
@@ -78,6 +73,7 @@ function prepareMocha() {
   patch.setCovIgnore(covIgnore);
 }
 
+var jscoverage = require('./lib/jscoverage');
 /**
  * enableInject description
  * @param {Boolean} true or false
@@ -97,9 +93,9 @@ exports.enableInject = patch.enableInject;
  *  testMod.$replace('name', obj);
  */
 exports.config = function (obj) {
-  var _inject_functions = patch.injectFunctions;
+  var inject_functions = patch.getInjectFunctions();
   for (var i in obj) {
-    _inject_functions[i] = obj[i];
+    inject_functions[i] = obj[i];
   }
 };
 /**
@@ -115,71 +111,34 @@ exports.process = jscoverage.process;
  * @sync
  * @param  {Path} source  absolute Path
  * @param  {Path} dest    absolute Path
- * @param  {Array} exclude  exclude files ['test_abc.js', /^_svn/]
  * @param  {Object} option  [description]
  */
-exports.processFile = function (source, dest, exclude, option) {
+exports.processFile = function (source, dest, option) {
   var content;
   var stats;
-  var flag;
-  var _exclude = [/^\./];
-  var self = this;
-  /*
-  var exp_abs = /^\//;
-  if (!source || !dest || !exp_abs.test(source) || !exp_abs.test(dest)) {
-    throw new Error('abs source path or abs dest path needed!');
-  }
-  */
-  if (exclude) {
-    _exclude = _exclude.concat(exclude);
-  }
   // test source is file or dir, or not a file
   try {
     stats = fs.statSync(source);
-    if (stats.isFile()) {
-      flag = 'file';
-    } else if (stats.isDirectory()) {
-      flag = 'dir';
-    } else {
-      throw new Error();
+    if (stats.isDirectory()) {
+      throw new Error('path is dir');
+    } else if (!stats.isFile()) {
+      throw new Error('path is not a regular file');
     }
   } catch (e) {
-    throw new Error('source is not a file or dir');
+    throw new Error('source file error' + e);
   }
 
-  if (flag === 'file') { // process file
-    fs.sync().mkdir(path.dirname(dest));
-    var extname = path.extname(source);
-    if (extname && extname !== '.js') {
-      // if it is not a js file, copy it
-      content = fs.readFileSync(source);
-      fs.writeFileSync(dest, content);
-    } else {
-      content = fs.readFileSync(source).toString();
-      content = content.toString();
-      content = this.process(source, content);
-      fs.writeFileSync(dest, content);
-    }
-  } else { // process dir
-    var nodes = fs.readdirSync(source);
-    var tmpPath, tmpDest;
-    var ignoreLen = _exclude.length;
-    nodes.forEach(function (v) {
-      // ignore filter
-      var m;
-      for (var n = 0 ; n < ignoreLen; n++) {
-        m = _exclude[n];
-        if (typeof m === 'string' && m === v) {
-          return;
-        } else if (typeof m === 'object' && m.test(v)) {
-          return;
-        }
-      }
-      // process file
-      tmpPath = path.join(source, v);
-      tmpDest = path.join(dest, v);
-      self.processFile(tmpPath, tmpDest, exclude, option);
-    });
+  fs.sync().mkdir(path.dirname(dest));
+  var extname = path.extname(source);
+  if (extname && extname !== '.js') {
+    // if it is not a js file, copy it
+    content = fs.readFileSync(source);
+    fs.writeFileSync(dest, content);
+  } else {
+    content = fs.readFileSync(source).toString();
+    content = content.toString();
+    content = this.process(source, content);
+    fs.writeFileSync(dest, content);
   }
 };
 
@@ -214,9 +173,9 @@ exports.coverageStats = function () {
       }
     }
     stats[file] = {
-        total: total,
-        touched: touched,
-        percent: total ? ((touched / total) * 100).toFixed(2) + '%' : 'Not prepared!!!'
+      total: total,
+      touched: touched,
+      percent: total ? ((touched / total) * 100).toFixed(2) + '%' : 'Not prepared!!!'
     };
   }
   return stats;
@@ -233,7 +192,7 @@ exports.coverage = function (print) {
     return arr;
   }
   Object.keys(stats).forEach(function (file) {
-    arr.push('[JSCOVERAGE] ' + file + ':' + stats[file].percent);
+    arr.push('[JSCOVERAGE] ' + file + ':' + stats[file].total + ',' + stats[file].touched + ',' + stats[file].percent);
   });
   if (print) {
     console.log(arr.join('\n'));

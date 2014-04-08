@@ -1,1 +1,3 @@
-/test/
+/test/index.js
+/test/jscoverage.js
+/test/test.js

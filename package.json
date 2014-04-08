@@ -14,7 +14,8 @@
   },
   "dependencies" : {
     "uglify-js" : "2.4.13",
-    "optimist" : "0.3.1"
+    "optimist" : "0.3.1",
+    "xfs" : "0.1.7"
   },
   "devDependencies" : {
     "mocha" : "*",

@@ -1,29 +1,77 @@
 #!/usr/bin/env node
+/**
+ * [argv description]
+ *  * @usage
+ *   # cli command
+ *
+ *   # using as a node module
+ */
 var argv = require('optimist').argv;
 var jscoverage = require('../index');
 var paths =  argv._;
 var source = paths[0];
 var dest = paths[1];
 var exclude = argv.exclude;
+var fs = require('xfs');
+var path = require('path');
 
 if (!source) {
   helpInfo();
   process.exit();
 }
+var sourceStat;
 
 if (!dest) {
   if (/\.\w+$/.test(source)) {
     dest = source.replace(/(\.\w+)$/, '-cov$1');
   } else {
-    dest = source + '-cov';
+    dest = source.replace(/(\/|\\)$/, '') + '-cov';
   }
 }
 
 if (exclude) {
   exclude = exclude.split(',');
+  exclude.forEach(function (v, i, a) {
+    a[i] = new RegExp(v.replace(/\./, '\\.').replace(/\*/g, '.*'));
+  });
 }
-
-jscoverage.processFile(source, dest, exclude, {});
+try {
+  sourceStat = fs.statSync(source);
+  if (sourceStat.isFile()) {
+    jscoverage.processFile(source, dest);
+  } else {
+    var count = 0;
+    fs.walk(source, function (err, file, done) {
+      if (err) {
+        console.error(err);
+        return done;
+      }
+      var flag = false;
+      exclude.forEach(function (v) {
+        if (v.test(file)) {
+          flag = true;
+        }
+      });
+      count ++;
+      var destFile = path.join(dest, file.substr(source.length));
+      if (flag) {
+        // copy exclude file
+        fs.save(destFile, fs.readFileSync(file));
+      } else {
+        jscoverage.processFile(file, destFile);
+      }
+      done();
+    }, function (err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('process files:', count);
+    });
+  }
+} catch (e) {
+  console.log('source file not exist!');
+  process.exit();
+}
 
 function helpInfo() {
   var help = [];
