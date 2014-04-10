@@ -22,8 +22,22 @@ describe('lib/jscoverage.js', function(){
     // mark line
     _global._$jscmd('$file$', 'line', 1);
     // mark cond
-    _global._$jscmd('$file$', 'cond', 1, '', 1, 1);
+    _global._$jscmd('$file$', 'cond', '1_1_1', '');
     expect(_global._$jscoverage['$file$'][1]).to.be(1);
     expect(_global._$jscoverage['$file$'].condition['1_1_1']).to.eql(1);
+  });
+
+  it('shoud return "" when content empty', function () {
+    var res = jscoverage.process('abc', '');
+    expect(res).to.be('');
+  });
+  it('shoud throw error when filename empty', function () {
+    var err;
+    try {
+      jscoverage.process(null, '');
+    } catch (e) {
+      err = e;
+    }
+    expect(err.message).to.match(/filename needed!/);
   });
 });

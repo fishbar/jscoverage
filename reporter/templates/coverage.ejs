@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Coverage</title>
+    <% include script %>
+    <% include style %>
+  </head>
+  <body>
+    <div id="coverage">
+      <h1 id="overview">jscoverage</h1>
+      <div id="menu">
+        <li><a href='#overview'>overview</a></li>
+        <% cov.files.forEach(function (file) { %>
+        <li>
+          <span class="cov <%= coverageClass(file.coverage) %>"> <%- file.coverage %></span>
+          <a href="#<%- file.filename %>">
+            <%
+              var segments = file.filename.split('/');
+              var basename = segments.pop();
+              if (segments.length) { %>
+              <span class="dirname"><%= segments.join('/') + '/' %></span>
+
+            <% } %>
+            <span class="basename"><%= basename %></span>
+          </a>
+        </li>
+        <% }); %>
+      </div>
+
+      <div id="stats" class="<%= coverageClass(cov.coverage) %>">
+        <div class="percentage"> <%= cov.coverage %>%</div>
+        <div class="sloc"> <%= cov.sloc %></div>
+        <div class="hits"> <%= cov.hits %></div>
+        <div class="misses"> <%= cov.misses %></div>
+      </div>
+      <div id="files">
+
+        <% cov.files.forEach(function (file) { %>
+        <div class="file">
+            <h2 id="<%- file.filename %>"> <%- file.filename %></h2>
+            <div id="stats" class="<%= coverageClass(file.coverage) %>">
+              <div class="percentage"> <%= file.coverage %>%</div>
+              <div class="sloc"><%- file.sloc %></div>
+              <div class="hits"><%- file.hits %></div>
+              <div class="misses"><%- file.misses %></div>
+            </div>
+            <table id="source">
+              <thead>
+                <tr>
+                  <th>Line</th>
+                  <th>Hits</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% var number; %>
+                <% var line; %>
+                <% for (number = 1; number < file.source.length; number ++) { %>
+                  <% line = file.source[number];%>
+                  <% if (line.condition) { %> 
+                      <tr class="miss">
+                        <td class="line"> <%- number %></td>
+                        <td class="hits"> <%- line.coverage %></td>
+                        <td class="source"> <%- line.source %></td>
+                      </tr>
+                  <% } else if (line.coverage > 0) { %>
+                      <tr class="hit">
+                        <td class="line"> <%- number %></td>
+                        <td class="hits"> <%- line.coverage %></td>
+                        <td class="source"> <%- line.source %></td>
+                      </tr>
+                  <% } else if (0 === line.coverage) { %>
+                      <tr class="miss">
+                        <td class="line"> <%- number %></td>
+                        <td class="hits"> 0 </td>
+                        <td class="source"> <%- line.source %></td>
+                      </tr>
+                  <% } else { %>
+                      <tr>
+                        <td class="line"><%- number %></td>
+                        <td class="hits"> </td>
+                        <td class="source"><%- line.source %></td>
+                      </tr>
+                  <% } %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>  
+        <% }); %>
+      </div>
+    </div>
+  </body>
+</html>

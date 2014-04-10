@@ -1,13 +1,13 @@
 {
   "name": "jscoverage",
-  "version": "0.3.8",
+  "version": "0.5.0-rc1",
   "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
   "main": "index.js",
   "bin": { 
     "jscoverage": "./bin/jscoverage"
   },
   "scripts": {
-    "test": "mocha test/test.js"
+    "test": "./node_modules/mocha/bin/_mocha -r ./index.js --covinject true test/"
   },
   "engines": {
     "node" : ">=0.8"
@@ -15,7 +15,8 @@
   "dependencies" : {
     "uglify-js" : "2.4.13",
     "optimist" : "0.3.1",
-    "xfs" : "0.1.7"
+    "xfs" : "0.1.7",
+    "ejs": "1.0.0"
   },
   "devDependencies" : {
     "mocha" : "*",

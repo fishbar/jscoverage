@@ -69,7 +69,7 @@ try {
     });
   }
 } catch (e) {
-  console.log('source file not exist!');
+  console.log('source file not exist!', e);
   process.exit();
 }
 

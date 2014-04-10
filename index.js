@@ -11,7 +11,7 @@ var argv = require('optimist').argv;
 var patch = require('./lib/patch');
 var cmd = argv['$0'];
 var MODE_MOCHA = false;
-var FLAG_PRINT = false;
+var FLAG_LOCK = false;
 if (/mocha/.test(cmd)) {
   MODE_MOCHA = true;
 }
@@ -21,10 +21,26 @@ if (MODE_MOCHA) {
 }
 /**
  * prepare env for mocha test
+ * @covignore
  */
 function prepareMocha() {
   var covIgnore = argv.covignore;
   var cwd = process.cwd();
+  var covlevel = argv.coverage;
+  if (covlevel) {
+    var tmp = covlevel.split(',');
+    covlevel = {
+      high: parseFloat(tmp[0], 10),
+      middle: parseFloat(tmp[1], 10),
+      low: parseFloat(tmp[2], 10)
+    };
+  } else {
+    covlevel = {
+      high: 0.9,
+      middle: 0.7,
+      low: 0.3
+    };
+  }
   /**
    * add after hook
    * @return {[type]} [description]
@@ -32,19 +48,33 @@ function prepareMocha() {
   process.nextTick(function () {
     try {
       after(function () {
-        if (FLAG_PRINT) {
+        if (FLAG_LOCK) {
           return;
         }
-        FLAG_PRINT = true;
-        if (argv.covsummary) {
-          exports.coverage(true);
-        }
-        if (argv.covdetail) {
-          exports.coverageDetail();
+        FLAG_LOCK = true;
+        if (typeof _$jscoverage === 'undefined') {
+          return;
+        } 
+        try {
+          if (argv.covout === 'none') {
+            return;
+          }
+          if (!argv.covout) {
+            argv.covout = 'summary';
+          }
+          var reporter;
+          if (/^\w+$/.test(argv.covout)) {
+            reporter = require('./reporter/' + argv.covout);
+          } else {
+            reporter = require(argv.covout);
+          }
+          reporter.process(_$jscoverage, exports.coverageStats(), covlevel);
+        } catch (e) {
+          console.error('jscoverage reporter error', e, e.stack);
         }
       });
     } catch (e) {
-
+      // do nothing
     }
   });
   if (argv.covinject) {
@@ -74,6 +104,7 @@ function prepareMocha() {
 }
 
 var jscoverage = require('./lib/jscoverage');
+
 /**
  * enableInject description
  * @param {Boolean} true or false
@@ -107,7 +138,7 @@ exports.config = function (obj) {
 exports.process = jscoverage.process;
 
 /**
- * processFile, instrument file or hole dir
+ * processFile, instrument singfile
  * @sync
  * @param  {Path} source  absolute Path
  * @param  {Path} dest    absolute Path
@@ -129,17 +160,11 @@ exports.processFile = function (source, dest, option) {
   }
 
   fs.sync().mkdir(path.dirname(dest));
-  var extname = path.extname(source);
-  if (extname && extname !== '.js') {
-    // if it is not a js file, copy it
-    content = fs.readFileSync(source);
-    fs.writeFileSync(dest, content);
-  } else {
-    content = fs.readFileSync(source).toString();
-    content = content.toString();
-    content = this.process(source, content);
-    fs.writeFileSync(dest, content);
-  }
+
+  content = fs.readFileSync(source).toString();
+  content = content.toString();
+  content = this.process(source, content);
+  fs.writeFileSync(dest, content);
 };
 
 
@@ -154,13 +179,15 @@ exports.coverageStats = function () {
   var touched;
   var n, len;
   var stats = {};
+  var conds, condsMap, cond;
+  var line, start, offset;
   if (typeof _$jscoverage === 'undefined') {
     return;
   }
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];
-    if (typeof tmp === 'function' || tmp.length === undefined) {
+    if (!tmp.length) {
       continue;
     }
     total = touched = 0;
@@ -172,70 +199,38 @@ exports.coverageStats = function () {
         }
       }
     }
+    conds = tmp.condition;
+    condsMap = {};
+    for (n in conds) {
+      if (conds[n] === 0) {
+        cond = n.split('_');
+        line = cond[0];
+        start = parseInt(cond[1], 10);
+        offset = parseInt(cond[2], 10);
+        if (!condsMap[line]) {
+          condsMap[line] = [];
+        }
+        condsMap[line].push([start, offset]);
+      } else {
+        touched ++;
+      }
+      total ++;
+    }
     stats[file] = {
-      total: total,
-      touched: touched,
-      percent: total ? ((touched / total) * 100).toFixed(2) + '%' : 'Not prepared!!!'
+      sloc: total,
+      hits: touched,
+      coverage: total ? touched / total : 0,
+      percent: total ? ((touched / total) * 100).toFixed(2) + '%' : '~',
+      condition: condsMap
     };
   }
   return stats;
 };
+
 /**
- * output coverage info
- * @public
- * @return {Array} [description]
+ * get lcov report
+ * @return {[type]} [description]
  */
-exports.coverage = function (print) {
-  var stats = exports.coverageStats();
-  var arr = [];
-  if (!stats) {
-    return arr;
-  }
-  Object.keys(stats).forEach(function (file) {
-    arr.push('[JSCOVERAGE] ' + file + ':' + stats[file].total + ',' + stats[file].touched + ',' + stats[file].percent);
-  });
-  if (print) {
-    console.log(arr.join('\n'));
-  }
-  return arr;
-};
-
-exports.coverageDetail = function () {
-  var file;
-  var tmp;
-  var source;
-  var lines;
-  var allcovered;
-  if (typeof _$jscoverage === 'undefined') {
-    return;
-  }
-  for (var i in _$jscoverage) {
-    file = i;
-    tmp = _$jscoverage[i];
-    if (typeof tmp === 'function' || tmp.length === undefined) {
-      continue;
-    }
-    source = tmp.source;
-    allcovered = true;
-    //console.log('[JSCOVERAGE]',file);
-    console.log('[UNCOVERED CODE]', file);
-    lines = [];
-    for (var n = 0, len = source.length; n < len ; n++) {
-      if (tmp[n] === 0) {
-        lines[n] = 1;
-        allcovered = false;
-      } else {
-        lines[n] = 0;
-      }
-    }
-    if (allcovered) {
-      console.log(colorful('\t100% covered', 'GREEN'));
-    } else {
-      printCoverageDetail(lines, source);
-    }
-  }
-};
-
 exports.getLCOV = function () {
   var tmp;
   var total;
@@ -248,7 +243,7 @@ exports.getLCOV = function () {
   Object.keys(_$jscoverage).forEach(function (file) {
     lcov += 'SF:' + file + '\n';
     tmp = _$jscoverage[file];
-    if (typeof tmp === 'function' || tmp.length === undefined) {
+    if (!tmp.length) {
       return;
     }
     total = touched = 0;
@@ -265,99 +260,3 @@ exports.getLCOV = function () {
   });
   return lcov;
 };
-
-
-function processLinesMask(lines) {
-  function processLeft3(arr, offset) {
-    var prev1 = offset - 1;
-    var prev2 = offset - 2;
-    var prev3 = offset - 3;
-    if (prev1 < 0) {
-      return;
-    }
-    arr[prev1] = arr[prev1] === 1 ? arr[prev1] : 2;
-    if (prev2 < 0) {
-      return;
-    }
-    arr[prev2] = arr[prev2] === 1 ? arr[prev2] : 2;
-    if (prev3 < 0) {
-      return;
-    }
-    arr[prev3] = arr[prev3] ? arr[prev3] : 3;
-  }
-  function processRight3(arr, offset) {
-    var len = arr.length;
-    var next1 = offset;
-    var next2 = offset + 1;
-    var next3 = offset + 2;
-    if (next1 >= len || arr[next1] === 1) {
-      return;
-    }
-    arr[next1] = arr[next1] ? arr[next1] : 2;
-    if (next2 >= len || arr[next2] === 1) {
-      return;
-    }
-    arr[next2] = arr[next2] ? arr[next2] : 2;
-    if (next3 >= len || arr[next3] === 1) {
-      return;
-    }
-    arr[next3] = arr[next3] ? arr[next3] : 3;
-  }
-  var offset = 0;
-  var now;
-  var prev = 0;
-  while (offset < lines.length) {
-    now = lines[offset];
-    now =  now !== 1 ? 0 : 1;
-    if (now !== prev) {
-      if (now === 1) {
-        processLeft3(lines, offset);
-      } else if (now === 0) {
-        processRight3(lines, offset);
-      }
-    }
-    prev = now;
-    offset ++;
-  }
-  return lines;
-}
-/**
- * printCoverageDetail
- * @param  {Array} lines [true] 1 means no coveraged
- * @return {}
- */
-function printCoverageDetail(lines, source) {
-  var len = lines.length;
-  lines = processLinesMask(lines);
-  //console.log(lines);
-  for (var i = 1; i < len; i++) {
-    if (lines[i] !== 0) {
-      if (lines[i] === 3) {
-        console.log('......');
-      } else if (lines[i] === 2) {
-        echo(i, source[i - 1], false);
-      } else {
-        echo(i, source[i - 1], true);
-      }
-    }
-  }
-  function echo(lineNum, str, bool) {
-    console.log(colorful(lineNum, 'LINENUM') + '|' + colorful(str, bool ? 'YELLOW' : 'GREEN'));
-  }
-}
-/**
- * colorful display
- * @param  {} str
- * @param  {} type
- * @return {}
- */
-function colorful(str, type) {
-  var head = '\x1B[', foot = '\x1B[0m';
-  var color = {
-    LINENUM : 36,
-    GREEN  : 32,
-    YELLOW  : 33,
-    RED : 31
-  };
-  return head + color[type] + 'm' + str + foot;
-}

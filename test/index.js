@@ -29,6 +29,31 @@ describe("index.js", function () {
       expect(fs.readFileSync(dest)).to.match(/_\$jscoverage/);
       fs.unlinkSync(dest);
     });
+    it('should throw error when path not file', function () {
+      var source = path.join(__dirname, './dir');
+      var dest = path.join(__dirname, './abc.cov.js');
+      var err;
+      try {
+        index.processFile(source, dest);
+      } catch (e) {
+        err = e;
+      }
+      expect(err.message).to.match(/path is dir/);
+    });
+    it('should throw error when path is a socket file', function (done) {
+      var net = require('net');
+      var serv = net.createServer(function(client){});
+      var ff = path.join(__dirname, './dir/a.sock');
+      serv.listen(ff, function (err) {
+        try {
+          index.processFile(ff, path.join(__dirname, './dir/sock-cov'));
+        } catch (e) {
+          expect(e.message).to.match(/not a regular file/);
+        }
+        serv.close(done);
+      });
+    });
+    /*
     it('should return an jsc convert dir', function (done) {
       var source = path.join(__dirname, './dir');
       var dest = path.join(__dirname, './dir-cov');
@@ -49,64 +74,29 @@ describe("index.js", function () {
         done();
       });
     });
+    */
     it('should throw error when source and dest not currect', function () {
       try {
         index.processFile();
       } catch (e) {
-        expect(e.message).to.match(/source is not a file or dir/);
+        expect(e.message).to.match(/path must be a string/);
       }
     });
     it('should throw error when source and dest not currect', function () {
       function _empty() {
         index.processFile('./abc', '.abc.cov');
       }
-      expect(_empty).to.throwException(/source is not a file or dir/);
+      expect(_empty).to.throwException(/no such file or directory/);
     });
     it('should throw error when source and dest not currect', function () {
       function _empty() {
         index.processFile(path.join(__dirname, './abdc.js'), '/tmp/abc.cov.js');
       }
-      expect(_empty).to.throwException(/source is not a file or dir/);
+      expect(_empty).to.throwException(/no such file or directory/);
     });
   });
 
-  describe('exports.processLinesMask', function () {
-    it('should be ok when test1', function () {
-      var process = index._get('processLinesMask');
-      var input  = [0, 0, 0, 1, 1, 0, 0, 1, 0, 0];
-      var result = [3, 2, 2, 1, 1, 2, 2, 1, 2, 2];
-      expect(process(input)).to.be.eql(result);
-    });
-    it('should be ok when test2', function () {
-      var process = index._get('processLinesMask');
-      var input  = [0, 0, 1, 1, 0, 0, 1, 0, 1];
-      var result = [2, 2, 1, 1, 2, 2, 1, 2, 1];
-      expect(process(input)).to.be.eql(result);
-    });
-    it('should be ok when test3', function () {
-      var process = index._get('processLinesMask');
-      var input  = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
-      var result = [2, 2, 1, 2, 2, 3, 0, 0, 0, 3, 2, 2, 1, 2];
-      expect(process(input)).to.be.eql(result);
-    });
-    it('should be ok when test4', function () {
-      var process = index._get('processLinesMask');
-      var input  = [0];
-      var result = [0];
-      expect(process(input)).to.be.eql(result);
-    });
-  });
-
-  describe('exports.processLinesMask', function () {
-    var orig_log = console.log;
-    var msg = [];
-    console.log = function (message) {
-      msg.push(message);
-    };
-    index.coverageDetail();
-    index.coverage();
-    console.log = orig_log;
-  });
+  
 
   describe('test Module.extension[".js"]', function () {
     it('should return a function', function (done) {
@@ -163,16 +153,13 @@ describe("index.js", function () {
       });
     });
   });
-  describe("test reset", function () {
-    it('should return a abc', function () {
-      abc._replace('reset.abc', 123);
-      expect(abc._get('reset.abc')).to.be(123);
-      abc._reset();
-      expect(abc._get('reset.abc')).to.be.a('function');
+  
+  describe('getLCOV', function () {
+    it('should be ok', function () {
+      var res = index.getLCOV();
+      expect(res).to.match(/end_of_record/);
+      expect(res).to.match(/SF:/);
+      expect(res).to.match(/DA:\d+,\d+/);
     });
   });
-});
-
-process.on('exit', function () {
-  //jsc.coverageDetail();
 });
