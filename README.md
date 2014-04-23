@@ -8,7 +8,7 @@ jscoverage tool, both node.js or javascript support
 
 
 ### install
-    
+
 ```sh
 npm install jscoverage
 ```
@@ -16,12 +16,12 @@ npm install jscoverage
 ### changelog
 
 from v0.5.0， jscoverage start using uglify2, and enhance the coverage range.
-now, jscoverage will find out which branch you missed! 
+now, jscoverage will find out which branch you missed!
 jscoverage can run with mocha, even with mocha's html-cov reporter.
 since mocha's html-cov dose not display branch cov info, jscoverage supply a new html-cov reporter
 
 ### get source code
-    
+
 ```sh
 git clone git://github.com/fishbar/jscoverage.git
 ```
@@ -34,7 +34,7 @@ mocha -r jscoverage --covignore .covignore --covout html --covinject true test
 ```
 the case above, mocha do nothing with these options: --covignore , --covout --covinject
 but jscoverage can recognise them, all support options are here:
-  
+
   --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
 
   --covout [output report] # can be: summary, detail, json, html, lcov, default summary
@@ -54,7 +54,7 @@ jscoverage source.js
 # convert source.js to source-cov.js
 jscoverage source.js dest.js
 # convert source.js to dest.js
-jscoverage sourcedir destdir --exclude a.js,b.js,c.js
+jscoverage sourcedir destdir --exclude a.js,b.js,c.js,*.min.js
 # convert all files in sourcedir to destdir, exclude list will be ignored
 ```
 jscoverage will copy exclude file from source dir to dest dir
