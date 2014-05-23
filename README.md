@@ -5,6 +5,7 @@ jscoverage
 jscoverage tool, both node.js or javascript support
 
 [![Build Status](https://travis-ci.org/fishbar/jscoverage.svg)](https://travis-ci.org/fishbar/jscoverage)
+[![NPM version](https://badge.fury.io/js/jscoverage.svg)](http://badge.fury.io/js/jscoverage)
 
 
 ### install
