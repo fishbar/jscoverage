@@ -31,14 +31,14 @@ git clone git://github.com/fishbar/jscoverage.git
 
 let mocha load jscoverage using -r options, like:
 ```sh
-mocha -r jscoverage --covignore .covignore --covout=html --covinject=true --coverage=50,85,90 test
+mocha -r jscoverage --covignore .covignore --covout=html --covinject=true --coverage=90,85,75 test
 ```
 the cmd above means:
   * mocha run test case with jscoverage module
   * jscoverage will ignore files while list in .covignore file
   * jscoverage will output a report in html format
   * jscoverage will inject a group of function to your module.exports (_get, _set, _reset, _replace);
-  * jscoverage is told that:  50% coverage is terrible, 85%+ is ok, 90%+ is greate
+  * jscoverage is told that:  90%+ is greate, 85%+ is ok, lower then 75% coverage is terrible
 
 jscoverage can recognise all options below:
 

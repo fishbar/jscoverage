@@ -60,16 +60,16 @@ exports.process = function (_$jscoverage, stats, covlevel) {
 
 function map(cov, stats) {
   var ret = {
-    instrumentation: 'jscoverage', 
-    sloc: 0, 
-    hits: 0, 
-    misses: 0, 
-    coverage: 0, 
+    instrumentation: 'jscoverage',
+    sloc: 0,
+    hits: 0,
+    misses: 0,
+    coverage: 0,
     files: []
   };
 
   for (var filename in cov) {
-    if (!cov(filename).length) {
+    if (!cov[filename] || !cov[filename].length) {
       continue;
     }
     var data = coverage(filename, cov[filename], stats[filename]);

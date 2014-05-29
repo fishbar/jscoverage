@@ -30,9 +30,9 @@ function prepareMocha() {
   if (covlevel) {
     var tmp = covlevel.split(',');
     covlevel = {
-      high: parseInt(tmp[0], 10)/10,
-      middle: parseInt(tmp[1], 10)/10,
-      low: parseInt(tmp[2], 10)/10
+      high: parseInt(tmp[0], 10) / 100,
+      middle: parseInt(tmp[1], 10) / 100,
+      low: parseInt(tmp[2], 10) / 100
     };
   } else {
     covlevel = {
