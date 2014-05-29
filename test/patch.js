@@ -27,4 +27,11 @@ describe('patch.js', function () {
       expect(checkModule('/tet/a.js')).to.be(false);
     });
   });
+
+  describe('require()', function () {
+    it('should be ok when require a json file', function () {
+      var a = require('./dir/test.json');
+      expect(a.test).to.be(1);
+    });
+  });
 });

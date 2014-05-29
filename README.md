@@ -31,10 +31,16 @@ git clone git://github.com/fishbar/jscoverage.git
 
 let mocha load jscoverage using -r options, like:
 ```sh
-mocha -r jscoverage --covignore .covignore --covout html --covinject true test
+mocha -r jscoverage --covignore .covignore --covout=html --covinject=true --coverage=50,85,90 test
 ```
-the case above, mocha do nothing with these options: --covignore , --covout --covinject
-but jscoverage can recognise them, all support options are here:
+the cmd above means:
+  * mocha run test case with jscoverage module
+  * jscoverage will ignore files while list in .covignore file
+  * jscoverage will output a report in html format
+  * jscoverage will inject a group of function to your module.exports (_get, _set, _reset, _replace);
+  * jscoverage is told that:  50% coverage is terrible, 85%+ is ok, 90%+ is greate
+
+jscoverage can recognise all options below:
 
   --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
 
@@ -42,7 +48,7 @@ but jscoverage can recognise them, all support options are here:
 
   --coverage [high,middle,low] # coverage level, default is: 90,70,30 , means 90% is high, 30% is low
 
-  --covinject [boolean] # switch if inject code for easytest(exports._get, _replace, _reset), default is false
+  --covinject [boolean] # switch if inject code for easytest(exports._get, _replace, _reset), `default is false`
 
 default jscoverage will search .covignore in the project root
 

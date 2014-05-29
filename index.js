@@ -30,9 +30,9 @@ function prepareMocha() {
   if (covlevel) {
     var tmp = covlevel.split(',');
     covlevel = {
-      high: parseFloat(tmp[0], 10),
-      middle: parseFloat(tmp[1], 10),
-      low: parseFloat(tmp[2], 10)
+      high: parseInt(tmp[0], 10)/10,
+      middle: parseInt(tmp[1], 10)/10,
+      low: parseInt(tmp[2], 10)/10
     };
   } else {
     covlevel = {
@@ -54,7 +54,7 @@ function prepareMocha() {
         FLAG_LOCK = true;
         if (typeof _$jscoverage === 'undefined') {
           return;
-        } 
+        }
         try {
           if (argv.covout === 'none') {
             return;
@@ -93,14 +93,18 @@ function prepareMocha() {
   } catch (e) {
     throw new Error('jscoverage loading covIgnore file error:' + covIgnore);
   }
+  var _ignore = [];
   covIgnore.forEach(function (v, i, a) {
+    if (!v) {
+      return;
+    }
     if (v.indexOf('/') === 0) {
       v = '^' + cwd + v;
     }
-    a[i] = new RegExp(v.replace(/\./g, '\\.').replace(/\*/g, '.*'));
+    _ignore.push(new RegExp(v.replace(/\./g, '\\.').replace(/\*/g, '.*')));
   });
 
-  patch.setCovIgnore(covIgnore);
+  patch.setCovIgnore(_ignore);
 }
 
 var jscoverage = require('./lib/jscoverage');
@@ -250,10 +254,10 @@ exports.getLCOV = function () {
     for (n = 0, len = tmp.length; n < len; n++) {
       if (tmp[n] !== undefined) {
         lcov += 'DA:' + n + ',' + tmp[n] + '\n';
-        total ++; 
+        total ++;
         if (tmp[n] > 0) {
           touched++;
-        } 
+        }
       }
     }
     lcov += 'end_of_record\n';

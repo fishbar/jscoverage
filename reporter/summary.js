@@ -17,19 +17,20 @@ exports.process = function (_$jscoverage, stats, covlevel) {
     var msg = '[JSCOVERAGE] ' + file + ': hits[' + stats[file].hits + '], sloc[' + stats[file].sloc + '] coverage[' + stats[file].percent + ']';
     var coverage = stats[file].coverage;
     var type;
-    if (coverage < covlevel.low) {
-      type = 'RED';
-    } else if (coverage < covlevel.middle) {
-      type = 'YELLOW';
-    } else if (coverage < covlevel.high) {
+    if (coverage >= covlevel.high) {
+      type = "GREEN";
+    } else if (coverage >= covlevel.middle) {
       type = null;
+    } else if (coverage >= covlevel.low) {
+      type = 'YELLOW';
     } else {
-      type = 'GREEN';
+      type = 'RED';
     }
     msg = colorful(msg, type);
     arr.push(msg);
   });
-  console.log('\n', arr.join('\n'));
+  console.log('\n')
+  console.log(arr.join('\n'));
 };
 
 function colorful(str, type) {
