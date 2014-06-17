@@ -46,15 +46,17 @@ describe('lib/jscoverage.js', function(){
   });
   it('should carry over existing coverage through inits', function(){
     // Init once
-    _global._$jscmd('$file$', 'init', [1], [], []);
+    _global._$jscmd('$file2$', 'init', [1], ['1_1_1'], ['source']);
     // mark line
-    _global._$jscmd('$file$', 'line', 1);
+    _global._$jscmd('$file2$', 'line', 1);
 
     // Init twice
-    _global._$jscmd('$file$', 'init', [1], [], []);
+    _global._$jscmd('$file2$', 'init', [1], [], []);
     // mark line again
-    _global._$jscmd('$file$', 'line', 1);
+    _global._$jscmd('$file2$', 'line', 1);
 
-    expect(_global._$jscoverage['$file$'][1]).to.be(2);
+    expect(_global._$jscoverage['$file2$'][1]).to.be(2);
+    expect(_global._$jscoverage['$file2$']['condition'].length).to.be(1);
+    expect(_global._$jscoverage['$file2$']['source'].length).to.be(1);
   });
 });
