@@ -15,7 +15,11 @@ func.pop();
 
 var wrapperGlobal = eval('(function(){ var global = {}; var $lines$ = [1]; var $conds$ = {"1_1_1": 0}; var $source$=["var a = a ? 1: 0;"];' + func.join('\n') + ' return global;})');
 
-var _global = wrapperGlobal();
+var _global;
+
+beforeEach(function(){
+  _global = wrapperGlobal();
+});
 
 describe('lib/jscoverage.js', function(){
   it('jscFunctionBody shoud be ok', function(){
@@ -39,5 +43,20 @@ describe('lib/jscoverage.js', function(){
       err = e;
     }
     expect(err.message).to.match(/filename needed!/);
+  });
+  it('should carry over existing coverage through inits', function(){
+    // Init once
+    _global._$jscmd('$file2$', 'init', [1], ['1_1_1'], ['source']);
+    // mark line
+    _global._$jscmd('$file2$', 'line', 1);
+
+    // Init twice
+    _global._$jscmd('$file2$', 'init', [1], [], []);
+    // mark line again
+    _global._$jscmd('$file2$', 'line', 1);
+
+    expect(_global._$jscoverage['$file2$'][1]).to.be(2);
+    expect(_global._$jscoverage['$file2$']['condition'].length).to.be(1);
+    expect(_global._$jscoverage['$file2$']['source'].length).to.be(1);
   });
 });
