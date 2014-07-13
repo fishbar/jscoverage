@@ -18,11 +18,12 @@ describe('test cli commands', function () {
   });
 
   after(function () {
-    fs.unlink('./dir/a1-cov.js');
-    fs.unlink('./dir/error-cov.js');
-    fs.unlink('./dir/shebang-cov.js');
-    fs.unlink('./dir/shebang_withbom-cov.js');
-    fs.unlink('./dir/test-cov.coffee');
+    console.log(process.cwd());
+    fs.unlink(path.join(__dirname, './dir/a1-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './dir/error-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './dir/shebang-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './dir/shebang_withbom-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './dir/test-cov.coffee'), function(err){});
     process.chdir(origCwd);
   });
 
