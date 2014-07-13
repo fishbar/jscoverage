@@ -1,9 +1,9 @@
 {
   "name": "jscoverage",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
   "main": "index.js",
-  "bin": { 
+  "bin": {
     "jscoverage": "./bin/jscoverage"
   },
   "scripts": {
@@ -16,7 +16,9 @@
     "uglify-js" : "2.4.13",
     "optimist" : "0.3.1",
     "xfs" : "0.1.8",
-    "ejs": "1.0.0"
+    "ejs": "1.0.0",
+    "debug": "1.0.3",
+    "coffee-script": "*"
   },
   "devDependencies" : {
     "mocha" : "*",

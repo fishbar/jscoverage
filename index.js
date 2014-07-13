@@ -5,6 +5,8 @@
  * CopyRight 2014 (c) Fish And Other Contributors
  *
  */
+require('coffee-script').register();
+var debug = require('debug')('jscoverage');
 var fs = require('xfs');
 var path = require('path');
 var argv = require('optimist').argv;
@@ -41,6 +43,7 @@ function prepareMocha() {
       low: 0.3
     };
   }
+  debug('covlevel', covlevel);
   /**
    * add after hook
    * @return {[type]} [description]
@@ -78,18 +81,21 @@ function prepareMocha() {
     }
   });
   if (argv.covinject) {
+    debug('covinject enabled');
     patch.enableInject(true);
   }
   if (!covIgnore) {
     try {
       var stat = fs.statSync('.covignore');
       stat && (covIgnore = '.covignore');
+      debug('.covignore file found!');
     } catch (e) {
       return;
     }
   }
   try {
     covIgnore = fs.readFileSync(covIgnore).toString().split(/\r?\n/g);
+    debug('loading .covignore file!');
   } catch (e) {
     throw new Error('jscoverage loading covIgnore file error:' + covIgnore);
   }
@@ -166,8 +172,27 @@ exports.processFile = function (source, dest, option) {
   fs.sync().mkdir(path.dirname(dest));
 
   content = fs.readFileSync(source).toString();
-  content = content.toString();
+  var sheBang = false;
+  if (content.charCodeAt(0) === 65279) {
+    content = content.substr(1);
+  }
+  if (content.indexOf('#!') === 0) {
+    var firstLineEnd = content.indexOf('\n');
+    sheBang = content.substr(0, firstLineEnd + 1);
+    content = content.substr(firstLineEnd + 1);
+  }
+  // check if coffee script
+  var ext = path.extname(source);
+  if (ext === '.coffee' || ext === '.litcoffee') {
+    var CoffeeScript = require('coffee-script');
+    content = CoffeeScript.compile(content, {
+      filename: source
+    });
+  }
   content = this.process(source, content);
+  if (sheBang) {
+    content = sheBang + content;
+  }
   fs.writeFileSync(dest, content);
 };
 

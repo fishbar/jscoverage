@@ -43,7 +43,7 @@ try {
     var count = 0;
     fs.walk(source, function (err, file, done) {
       if (err) {
-        console.error(err);
+        console.log(err);
         return done;
       }
       var flag = false;
@@ -65,13 +65,13 @@ try {
       done();
     }, function (err) {
       if (err) {
-        return console.error(err);
+        return console.log(err);
       }
       console.log('process files:', count);
     });
   }
 } catch (e) {
-  console.log('source file not exist!', e);
+  console.log('[ERROR]', e.toString());
   process.exit();
 }
 
