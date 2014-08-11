@@ -13,6 +13,7 @@ var argv = require('optimist').argv;
 var patch = require('./lib/patch');
 var cmd = argv['$0'];
 var MODE_MOCHA = false;
+process.__MOCHA_PREPARED = false;
 var FLAG_LOCK = false;
 if (/mocha/.test(cmd)) {
   MODE_MOCHA = true;
@@ -29,6 +30,10 @@ function prepareMocha() {
   var covIgnore = argv.covignore;
   var cwd = process.cwd();
   var covlevel = argv.coverage;
+  if (process.__MOCHA_PREPARED) {
+    return;
+  }
+  process.__MOCHA_PREPARED = true;
   if (covlevel) {
     var tmp = covlevel.split(',');
     covlevel = {
@@ -48,6 +53,7 @@ function prepareMocha() {
    * add after hook
    * @return {[type]} [description]
    */
+  var supportReporters = ['list', 'spec', 'tap'];
   process.nextTick(function () {
     try {
       after(function () {
@@ -63,7 +69,12 @@ function prepareMocha() {
             return;
           }
           if (!argv.covout) {
-            argv.covout = 'summary';
+            var mochaR = argv.reporter || argv.R;
+            if (supportReporters.indexOf(mochaR) !== -1) {
+              argv.covout = mochaR;
+            } else {
+              argv.covout = 'list';
+            }
           }
           var reporter;
           if (/^\w+$/.test(argv.covout)) {

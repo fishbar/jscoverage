@@ -14,7 +14,6 @@
 exports.process = function (_$jscoverage, stats, covlevel) {
   var arr = [];
   Object.keys(stats).forEach(function (file) {
-    var msg = '[JSCOVERAGE] ' + file + ': hits[' + stats[file].hits + '], sloc[' + stats[file].sloc + '] coverage[' + stats[file].percent + ']';
     var coverage = stats[file].coverage;
     var type;
     if (coverage >= covlevel.high) {
@@ -26,7 +25,8 @@ exports.process = function (_$jscoverage, stats, covlevel) {
     } else {
       type = 'RED';
     }
-    msg = colorful(msg, type);
+    var msg = 'Coverage ' + file + ': hits[' + stats[file].hits + '], sloc[' + stats[file].sloc + '] coverage[' + colorful(stats[file].percent, type) + ']';
+    msg = '  ' + colorful('\u204D', type) + ' ' +  colorful(msg, 'DEFAULT');
     arr.push(msg);
   });
   console.log('\n')
@@ -42,7 +42,8 @@ function colorful(str, type) {
     LINENUM : 36,
     GREEN  : 32,
     YELLOW  : 33,
-    RED : 31
+    RED : 31,
+    DEFAULT: 0
   };
   return head + color[type] + 'm' + str + foot;
 }

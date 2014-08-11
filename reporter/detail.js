@@ -4,19 +4,30 @@
  * Create   : 2014-04-10 16:23:23
  * CopyRight 2014 (c) Fish And Other Contributors
  */
-
+var originConsole = console;
+var DEBUG;
+console = {
+  log: function () {
+    if (DEBUG === true) {
+      return; //do not print things
+    } else {
+      originConsole.log.apply(originConsole, Array.prototype.slice.apply(arguments));
+    }
+  }
+};
 /**
  * print detail coverage info in console
  * @param  {Object} _$jscoverage [description]
  * @param  {Object} stats        [description]
  * @param  {Number} covlevel       [description]
  */
-exports.process = function (_$jscoverage, stats, covlevel) {
+exports.process = function (_$jscoverage, stats, covlevel, debug) {
   var file;
   var tmp;
   var source;
   var lines;
   var allcovered;
+  DEBUG = debug === true ? true : false;
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];

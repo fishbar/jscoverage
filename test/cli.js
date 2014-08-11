@@ -18,7 +18,6 @@ describe('test cli commands', function () {
   });
 
   after(function () {
-    console.log(process.cwd());
     fs.unlink(path.join(__dirname, './dir/a1-cov.js'), function(err){});
     fs.unlink(path.join(__dirname, './dir/error-cov.js'), function(err){});
     fs.unlink(path.join(__dirname, './dir/shebang-cov.js'), function(err){});
@@ -29,7 +28,7 @@ describe('test cli commands', function () {
 
   describe('jscoverage file', function () {
     it('should ok cli jscoverage process a file', function (done) {
-      exec('../bin/jscoverage dir/a1.js', function (error, stdout, stderr) {
+      exec('../bin/jscoverage dir/a1.js --covout=none', function (error, stdout, stderr) {
         expect(error).to.be(null);
         expect(stdout).to.be.empty();
         expect(stderr).to.be.empty();

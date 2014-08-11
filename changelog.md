@@ -1,3 +1,7 @@
+v0.5.6
+
+  * add reporters spec, list, tap
+
 v0.5.5
 
   * support coffee-script
