@@ -48,12 +48,12 @@ the cmd above means:
   * jscoverage will switch the colorful output:  90%+ is greate, 85%+ is ok, lower then 75% coverage is terrible
 
 jscoverage can recognise all options below:
-
-   --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
-   --covout [output report] # can be:  spec, list, tap, detail, html
-   --coverage [high,middle,low] # coverage level, default is: 90,70,30 , means 90% is high, 30% is low
-   --covinject [boolean] # switch if inject code for easytest(exports._ge,_replace, _reset), `default is false`
-
+```
+ --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
+ --covout [output report] # can be:  spec, list, tap, detail, html
+ --coverage [high,middle,low] # coverage level, default is: 90,70,30 , means 90% is high, 30% is low
+ --covinject [boolean] # switch if inject code for easytest(exports._get, exports._replace, exports._reset)
+```
 default jscoverage will search .covignore in the project root
 
 ### using jscoverage as cli command
@@ -69,10 +69,6 @@ jscoverage sourcedir destdir --exclude a.js,b.js,c.js,*.min.js
 # convert all files in sourcedir to destdir, exclude list will be ignored
 ```
 jscoverage will copy exclude file from source dir to dest dir
-
-### using jscoverage programmatically
-
-comming soon
 
 ### using inject api for node.js test
 
@@ -91,6 +87,10 @@ using bellow comment, jscoverage will ignore the following block/statement
 ```js
   /* @covignore */
 ```
+
+### using jscoverage programmatically
+
+comming soon
 
 ### mocha global leaks detect
 
