@@ -11,13 +11,16 @@
  * @param  {[type]} stats        coverage stats
  * @param  {Object} covmin       coverage level {high, middle, low}
  */
-exports.process = function (_$jscoverage, stats, covlevel) {
+exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
   var arr = [];
-  Object.keys(stats).forEach(function (file) {
-    var coverage = stats[file].coverage;
+  var files = Object.keys(stats);
+  var colorful = utils.colorful;
+  var maxFileName = maxStr(files);
+  files.forEach(function (file) {
+    var coverage = stats[file].lineCoverage;
     var type;
     if (coverage >= covlevel.high) {
-      type = "GREEN";
+      type = 'GREEN';
     } else if (coverage >= covlevel.middle) {
       type = null;
     } else if (coverage >= covlevel.low) {
@@ -25,25 +28,47 @@ exports.process = function (_$jscoverage, stats, covlevel) {
     } else {
       type = 'RED';
     }
-    var msg = 'Coverage ' + file + ': hits[' + stats[file].hits + '], sloc[' + stats[file].sloc + '] coverage[' + colorful(stats[file].percent, type) + ']';
+    var msg =
+      'Coverage ' + fillStr(file, maxFileName) +
+        ' line[' + colorful(formatPercent(stats[file].lineCoverage), type) + '] ' +
+        ' branch[' + colorful(formatPercent(stats[file].branchCoverage), type) + ']';
     msg = '  ' + colorful('\u204D', type) + ' ' +  colorful(msg, 'DEFAULT');
     arr.push(msg);
   });
-  console.log('\n')
+  console.log('\n');
   console.log(arr.join('\n'));
 };
 
-function colorful(str, type) {
-  if (!type) {
-    return str;
+function formatPercent(n) {
+  var str = Math.floor(n * 100) + '%';
+  var maxLen = 4;
+  var rest = maxLen - str.length;
+  return fix(rest, ' ') + str;
+}
+
+function maxStr(arr){
+  var max = 0;
+  arr.forEach(function(a) {
+    if (a.length > max) {
+      max = a.length;
+    }
+  });
+  max = (13 + max) / 8;
+  if (max < Math.ceil(max)) {
+    return Math.ceil(max);
+  } else {
+    return max + 1;
   }
-  var head = '\x1B[', foot = '\x1B[0m';
-  var color = {
-    LINENUM : 36,
-    GREEN  : 32,
-    YELLOW  : 33,
-    RED : 31,
-    DEFAULT: 0
-  };
-  return head + color[type] + 'm' + str + foot;
+}
+function fix(n, fill) {
+  var str = [];
+  fill = fill || '\t';
+  for (var i = 0; i < n; i++) {
+    str.push(fill);
+  }
+  return str.join('');
+}
+function fillStr(str, len) {
+  var n = Math.floor( (13+ str.length) / 8);
+  return str + fix(len - n);
 }

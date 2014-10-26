@@ -1,51 +1,63 @@
-var util = require('./util');
-
-var colorful = util.colorful;
-
-var symbols = {
-  ok: '✓',
-  warn: '⁍',
-  err: '✱'
-};
-
-// With node.js on Windows: use symbols available in terminal default fonts
-if ('win32' === process.platform) {
-  symbols.ok = '\u221A';
-  symbols.warn = '\u204D';
-  symbols.err = '\u2731';
-}
 
 var indents = 1;
 function indent() {
   return Array(indents).join('  ');
 }
 
-exports.process = function (_$jscoverage, stats, covlevel) {
+exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
   var arr = [];
+  var colorful = utils.colorful;
   console.log('\n');
   console.log(colorful('%s%s', 'DEFAULT'), indent(), 'Coverage result');
   indents ++;
-  Object.keys(stats).forEach(function (file) {
-    var coverage = stats[file].coverage;
-    var type;
-    var head;
-    if (coverage >= covlevel.high) {
-      type = 'GREEN';
-      head = symbols.ok;
-    } else if (coverage >= covlevel.middle) {
-      type = null;
-      head = symbols.ok;
-    } else if (coverage >= covlevel.low) {
-      type = 'YELLOW';
-      head = symbols.warn;
-    } else {
-      type = 'RED';
-      head = symbols.err;
-    }
-    var msg = file +
-      ': hits[' + stats[file].hits + '], sloc[' + stats[file].sloc + '] coverage[' + colorful(stats[file].percent, type) + ']';
+  var files = Object.keys(stats);
+  var maxFileLength = maxStr(files);
+  files.forEach(function (file) {
+    var coverage = stats[file].lineCoverage;
+    var type = utils.getType(covlevel, coverage);
+    var head = type[1];
+    type = type[0];
+    var msg = fillStr(file, maxFileLength) +
+      'line[' + colorful(formatPercent(stats[file].lineCoverage), type) + ']' +
+      '  branch[' + colorful(formatPercent(stats[file].branchCoverage), type) + ']';
     msg = indent() + colorful(head, type) + ' ' + colorful(msg, 'DEFAULT');
     arr.push(msg);
   });
   console.log(arr.join('\n'));
 };
+
+function formatPercent(n) {
+  var str = Math.floor(n * 100) + '%';
+  var maxLen = 4;
+  var rest = maxLen - str.length;
+  return fix(rest, ' ') + str;
+}
+
+function maxStr(arr){
+  var max = 0;
+  arr.forEach(function(a) {
+    if (a.length > max) {
+      max = a.length;
+    }
+  });
+  var len = indent().length + 2;
+  max = (len + max) / 8;
+  if (max < Math.ceil(max)) {
+    return Math.ceil(max);
+  } else {
+    return max + 1;
+  }
+}
+function fix(n, fill) {
+  var str = [];
+  fill = fill || '\t';
+  for (var i = 0; i < n; i++) {
+    str.push(fill);
+  }
+  return str.join('');
+}
+function fillStr(str, len) {
+  var prefix = indent().length + 2;
+  var n = Math.floor( (prefix+ str.length) / 8);
+  return str + fix(len - n);
+}

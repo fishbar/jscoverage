@@ -96,7 +96,7 @@ describe("index.js", function () {
     });
   });
 
-  
+
 
   describe('test Module.extension[".js"]', function () {
     it('should return a function', function (done) {
@@ -153,7 +153,7 @@ describe("index.js", function () {
       });
     });
   });
-  
+
   describe('getLCOV', function () {
     it('should be ok', function () {
       var res = index.getLCOV();

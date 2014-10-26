@@ -115,6 +115,7 @@ footer span {
 
 #menu {
   position: fixed;
+  width: 220px;
   font-size: 12px;
   overflow-y: auto;
   top: 0;
@@ -196,18 +197,18 @@ footer span {
 }
 
 #menu .cov {
-  background: rgba(200,200,200, 1);
+  background: rgba(230,230,230, 1);
   position: absolute;
-  top: 0;
+  top: 2px;
   right: 8px;
   font-size: 9px;
-  opacity: .6;
+  opacity: .9;
   text-align: left;
-  width: 17px;
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-  border-radius: 10px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
   padding: 1px 2px;
+  line-height: 10px;
   text-align: center;
 }
 
@@ -225,10 +226,15 @@ footer span {
 }
 
 #stats div {
-  float: left;
+  display:inline-block;
   padding: 0 5px;
 }
 
+#stats::before {
+  content: 'Coverage';
+  font-weight:bold;
+  color: #aaa;
+}
 #stats::after {
   display: block;
   content: '';
@@ -240,21 +246,23 @@ footer span {
   color: #b6b6b6;
 }
 
-#stats .percentage::after {
-  content: ' coverage';
-  color: #b6b6b6;
+#stats .linecoverage::before {
+  content: 'Line:';
+  color: #aaa;
 }
 
-#stats .hits {
-  display: none;
+#stats .branchcoverage::before {
+  content: 'Branch:';
+  color: #aaa;
 }
-#stats .misses:after {
-  content: ' MISSES';
-  color: #b6b6b6;
+
+#stats .misses:before {
+  content: 'miss:';
+  color: #aaa;
 }
 
 .high {
-  color: #00d4b4;
+  color: #5AB75D;
 }
 .medium {
   color: #e87d0d;
@@ -299,14 +307,23 @@ table td.hits {
   background: #f0f0f0;
 }
 
+tr.miss-branch td.line,
+tr.miss-branch td.hits {
+  background: #FFE5A0;
+}
+
 tr.miss td.line,
 tr.miss td.hits {
   background: #e6c3c7;
 }
 
+tr.miss-branch td{
+  background: #FFE5A0;
+}
 tr.miss td {
   background: #f8d5d8;
 }
+
 
 td.source {
   padding-left: 15px;
@@ -322,9 +339,10 @@ code .keyword { color: #8A6343 }
 code .number { color: #2F6FAD }
 
 i.cond-miss{
-  background-color:#ff6464;
+  background-color:#F48A24;
   font-style:normal;
   border-radius: 4px;
   padding: 0px 2px;
+  color:#fff;
 }
 </style>

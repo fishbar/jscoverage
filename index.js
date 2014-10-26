@@ -11,6 +11,7 @@ var fs = require('xfs');
 var path = require('path');
 var argv = require('optimist').argv;
 var patch = require('./lib/patch');
+var rptUtil = require('./reporter/util');
 var cmd = argv['$0'];
 var MODE_MOCHA = false;
 process.__MOCHA_PREPARED = false;
@@ -22,6 +23,7 @@ if (/mocha/.test(cmd)) {
 if (MODE_MOCHA) {
   prepareMocha();
 }
+var COV_REPORT_NAME = argv.name || 'jscoverage reporter';
 /**
  * prepare env for mocha test
  * @covignore
@@ -82,7 +84,7 @@ function prepareMocha() {
           } else {
             reporter = require(argv.covout);
           }
-          reporter.process(_$jscoverage, exports.coverageStats(), covlevel);
+          reporter.process(_$jscoverage, exports.coverageStats(), covlevel, COV_REPORT_NAME, rptUtil);
         } catch (e) {
           console.error('jscoverage reporter error', e, e.stack);
         }
@@ -187,6 +189,7 @@ exports.processFile = function (source, dest, option) {
   if (content.charCodeAt(0) === 65279) {
     content = content.substr(1);
   }
+  // cut the shebang
   if (content.indexOf('#!') === 0) {
     var firstLineEnd = content.indexOf('\n');
     sheBang = content.substr(0, firstLineEnd + 1);
@@ -207,7 +210,9 @@ exports.processFile = function (source, dest, option) {
   fs.writeFileSync(dest, content);
 };
 
-
+function fixData(num) {
+  return Math.round(num * 10000) / 10000;
+}
 /**
  * sum the coverage rate
  * @public
@@ -215,11 +220,13 @@ exports.processFile = function (source, dest, option) {
 exports.coverageStats = function () {
   var file;
   var tmp;
-  var total;
-  var touched;
+  var lineTotal;
+  var lineHits;
+  var branchTotal;
+  var branchHits;
   var n, len;
   var stats = {};
-  var conds, condsMap, cond;
+  var branches, branchesMap, branch;
   var line, start, offset;
   if (typeof _$jscoverage === 'undefined') {
     return;
@@ -230,38 +237,44 @@ exports.coverageStats = function () {
     if (!tmp.length) {
       continue;
     }
-    total = touched = 0;
+    // reset the counters;
+    lineTotal = lineHits = 0;
+    branchTotal = branchHits = 0;
+
     for (n = 0, len = tmp.length; n < len; n++) {
       if (tmp[n] !== undefined) {
-        total ++;
+        lineTotal ++;
         if (tmp[n] > 0) {
-          touched ++;
+          lineHits ++;
         }
       }
     }
-    conds = tmp.condition;
-    condsMap = {};
-    for (n in conds) {
-      if (conds[n] === 0) {
-        cond = n.split('_');
-        line = cond[0];
-        start = parseInt(cond[1], 10);
-        offset = parseInt(cond[2], 10);
-        if (!condsMap[line]) {
-          condsMap[line] = [];
+    // calculate the branches coverage
+    branches = tmp.condition;
+    branchesMap = {};
+    for (n in branches) {
+      if (branches[n] === 0) {
+        branch = n.split('_');
+        line = branch[0];
+        start = parseInt(branch[1], 10);
+        offset = parseInt(branch[2], 10);
+        if (!branchesMap[line]) {
+          branchesMap[line] = [];
         }
-        condsMap[line].push([start, offset]);
+        branchesMap[line].push([start, offset]);
       } else {
-        touched ++;
+        branchHits ++;
       }
-      total ++;
+      branchTotal ++;
     }
     stats[file] = {
-      sloc: total,
-      hits: touched,
-      coverage: total ? touched / total : 0,
-      percent: total ? ((touched / total) * 100).toFixed(2) + '%' : '~',
-      condition: condsMap
+      lineSloc: lineTotal,
+      lineHits: lineHits,
+      lineCoverage: lineTotal ? fixData(lineHits / lineTotal) : 0,
+      branchSloc: branchTotal,
+      branchHits: branchHits,
+      branchCoverage: branchTotal ? fixData(branchHits / branchTotal) : 0,
+      branches: branchesMap
     };
   }
   return stats;

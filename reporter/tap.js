@@ -11,44 +11,27 @@
  * @param  {[type]} stats        coverage stats
  * @param  {Object} covmin       coverage level {high, middle, low}
  */
-exports.process = function (_$jscoverage, stats, covlevel) {
+exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
   var arr = [];
-  var totalSloc = 0;
-  var totalHits = 0;
+  var lineSloc = 0, branchSloc = 0;
+  var lineHits =0, branchHits = 0;
+  var formatCoverage = utils.formatCoverage;
   Object.keys(stats).forEach(function (file) {
-    var coverage = stats[file].coverage;
-    var type;
-    if (coverage >= covlevel.high) {
-      type = "GREEN";
-    } else if (coverage >= covlevel.middle) {
-      type = null;
-    } else if (coverage >= covlevel.low) {
-      type = 'YELLOW';
-    } else {
-      type = 'RED';
-    }
-    var msg = 'Coverage ' + file + ': hits[' + stats[file].hits + '], sloc[' + stats[file].sloc + '] coverage[' + colorful(stats[file].percent, type) + ']';
-    msg = '  ' + colorful('\u204D', type) + ' ' +  colorful(msg, 'DEFAULT');
+    var coverage = stats[file].lineCoverage;
+    var type = utils.getType(covlevel, coverage)[0];
+    var msg = 'Coverage ' + file + ': line[' + utils.colorful(formatCoverage(stats[file].lineCoverage), type) + ']' +
+      ', branch[' + utils.colorful(formatCoverage(stats[file].branchCoverage), type) + ']';
+    msg = '#  ' + utils.colorful('\u204D', type) + ' ' +  utils.colorful(msg, 'DEFAULT');
     arr.push(msg);
-    totalSloc += stats[file].sloc;
-    totalHits += stats[file].hits;
+    lineSloc += stats[file].lineSloc;
+    lineHits += stats[file].lineHits;
+    branchSloc += stats[file].branchSloc;
+    branchHits += stats[file].branchHits;
   });
-  console.log('\n')
+  console.log('\n');
   console.log(arr.join('\n'));
-  console.log('# coverage %s%', Math.ceil(totalHits * 10000 / totalSloc)/ 100);
-};
+  var lineCoverage = formatCoverage(lineHits / lineSloc);
+  var branchCoverage = formatCoverage(branchHits / branchSloc);
 
-function colorful(str, type) {
-  if (!type) {
-    return str;
-  }
-  var head = '\x1B[', foot = '\x1B[0m';
-  var color = {
-    LINENUM : 36,
-    GREEN  : 32,
-    YELLOW  : 33,
-    RED : 31,
-    DEFAULT: 0
-  };
-  return head + color[type] + 'm' + str + foot;
-}
+  console.log('# coverage line %s, branch %s', lineCoverage, branchCoverage);
+};

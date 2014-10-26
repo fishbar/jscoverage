@@ -37,7 +37,7 @@ exports.process = function (_$jscoverage, stats, covlevel, debug) {
     source = tmp.source;
     allcovered = true;
     //console.log('[JSCOVERAGE]',file);
-    console.log('[UNCOVERED CODE]', file);
+
     lines = [];
     for (var n = 0, len = source.length; n < len ; n++) {
       if (tmp[n] === 0) {
@@ -48,10 +48,12 @@ exports.process = function (_$jscoverage, stats, covlevel, debug) {
       }
     }
     if (allcovered) {
-      console.log(colorful('\t100% covered', 'GREEN'));
+      console.log(file, colorful('\t100% covered', 'GREEN'));
     } else {
+      console.log('[UNCOVERED CODE]', file);
       printCoverageDetail(lines, source);
     }
+    console.log('\n\n');
   }
 };
 
@@ -117,6 +119,7 @@ function processLinesMask(lines) {
 function printCoverageDetail(lines, source) {
   var len = lines.length;
   lines = processLinesMask(lines);
+  console.log('-- START --');
   //console.log(lines);
   for (var i = 1; i < len; i++) {
     if (lines[i] !== 0) {
@@ -132,6 +135,7 @@ function printCoverageDetail(lines, source) {
   function echo(lineNum, str, bool) {
     console.log(colorful(lineNum, 'LINENUM') + '|' + colorful(str, bool ? 'YELLOW' : 'GREEN'));
   }
+  console.log('-- END --');
 }
 /**
  * colorful display

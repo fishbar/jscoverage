@@ -21,16 +21,16 @@ var path = require('path');
  * @api public
  */
 
-exports.process = function (_$jscoverage, stats, covlevel) {
+exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
   var result = map(_$jscoverage, stats);
   var file = __dirname + '/templates/coverage.ejs';
   var str = fs.readFileSync(file, 'utf8').toString();
-
+  result.instrumentation = name;
   var html = ejs.render(str, {
-    debug: true,
+    debug: false,
     cov: result,
     coverageClass: function (n) {
-      n = n / 100;
+      // n = n;
       if (n >= covlevel.high) {
         return 'high';
       }
@@ -42,6 +42,7 @@ exports.process = function (_$jscoverage, stats, covlevel) {
       }
       return 'terrible';
     },
+    formatCoverage:utils.formatCoverage,
     filename: path.join(__dirname, './templates/cached.ejs')
   });
 
@@ -60,11 +61,14 @@ exports.process = function (_$jscoverage, stats, covlevel) {
 
 function map(cov, stats) {
   var ret = {
-    instrumentation: 'jscoverage',
-    sloc: 0,
-    hits: 0,
-    misses: 0,
-    coverage: 0,
+    lineSloc: 0,
+    lineHits: 0,
+    lineMisses: 0,
+    lineCoverage: 0,
+    branchSloc: 0,
+    branchHits: 0,
+    branchMisses: 0,
+    branchCoverage: 0,
     files: []
   };
 
@@ -74,21 +78,26 @@ function map(cov, stats) {
     }
     var data = coverage(filename, cov[filename], stats[filename]);
     ret.files.push(data);
-    ret.hits += data.hits;
-    ret.misses += data.misses;
-    ret.sloc += data.sloc;
+    ret.lineHits += data.lineHits;
+    ret.lineMisses += data.lineMisses;
+    ret.lineSloc += data.lineSloc;
+    ret.branchHits += data.branchHits;
+    ret.branchMisses += data.branchMisses;
+    ret.branchSloc += data.branchSloc;
   }
 
   ret.files.sort(function(a, b) {
     return a.filename.localeCompare(b.filename);
   });
 
-  if (ret.sloc > 0) {
-    ret.coverage = (ret.hits / ret.sloc) * 100;
+  if (ret.lineSloc > 0) {
+    ret.lineCoverage = Math.round(ret.lineHits / ret.lineSloc * 10000) / 100;
   }
-
+  if (ret.branchSloc > 0) {
+    ret.branchCoverage = Math.round(ret.branchHits / ret.branchSloc * 10000) / 100;
+  }
   return ret;
-};
+}
 
 /**
  * Map jscoverage data for a single source file
@@ -103,18 +112,22 @@ function map(cov, stats) {
 function coverage(filename, data, stats) {
   var ret = {
     filename: filename,
-    coverage: stats.coverage * 100,
-    hits: stats.hits,
-    misses: stats.sloc - stats.hits,
-    sloc: stats.sloc,
+    lineCoverage: stats.lineCoverage,
+    lineHits: stats.lineHits,
+    lineMisses: stats.lineSloc - stats.lineHits,
+    lineSloc: stats.lineSloc,
+    branchCoverage: stats.branchCoverage,
+    branchHits: stats.branchHits,
+    branchMisses: stats.branchSloc - stats.branchHits,
+    branchSloc: stats.branchSloc,
     source: []
   };
   data.source.forEach(function(line, num){
     num++;
-    var conds = stats.condition[num];
+    var branches = stats.branches[num];
     var splits = [];
-    if (conds) {
-      conds.forEach(function (v) {
+    if (branches) {
+      branches.forEach(function (v) {
         if (!splits[v[0]]) {
           splits[v[0]] = {start:[], end:[]};
         }
@@ -141,7 +154,7 @@ function coverage(filename, data, stats) {
     ret.source[num] = {
       source: line,
       coverage: data[num] === undefined ? '' : data[num],
-      condition: conds && conds.length ? true : false
+      branches: branches && branches.length ? true : false
     };
   });
   return ret;
