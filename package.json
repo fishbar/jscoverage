@@ -1,6 +1,6 @@
 {
   "name": "jscoverage",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
   "main": "index.js",
   "bin": {
@@ -13,7 +13,7 @@
     "node" : ">=0.8"
   },
   "dependencies" : {
-    "uglify-js" : "2.4.13",
+    "uglify-js" : "2.4.15",
     "optimist" : "0.3.1",
     "xfs" : "0.1.8",
     "ejs": "1.0.0",
