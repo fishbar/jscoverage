@@ -18,18 +18,25 @@ npm install jscoverage
 
 from v0.5.0， jscoverage start using uglify2, and enhance the coverage range.
 now, jscoverage will find out which branch you missed!
-jscoverage can run with mocha, even with mocha's html-cov reporter.
-since mocha's html-cov dose not display branch cov info, jscoverage supply a new html-cov reporter
 
-### get source code
+### Get start
 
+using mocha loading the jscoverage module, then it's work:
 ```sh
-git clone git://github.com/fishbar/jscoverage.git
+mocha -r jscoverage test/
 ```
+
+jscoverage will append coverage info when you select `list` or `spec` or `tap` reporter in mocha
+```sh
+mocha -r jscoverage -R spec test/
+```
+
+besides, you can use `--covout` to specify the reporter， like `html`, `detail`.
+the `detail` reporter will print the uncovered code in the console directly.
 
 ### using jscoverage with mocha
 
-let mocha load jscoverage using -r options, like:
+full modelł:
 ```sh
 mocha -r jscoverage --covignore .covignore --covout=html --covinject=true --coverage=90,85,75 test
 ```
@@ -38,17 +45,14 @@ the cmd above means:
   * jscoverage will ignore files while list in .covignore file
   * jscoverage will output a report in html format
   * jscoverage will inject a group of function to your module.exports (_get, _set, _reset, _replace);
-  * jscoverage is told that:  90%+ is greate, 85%+ is ok, lower then 75% coverage is terrible
+  * jscoverage will switch the colorful output:  90%+ is greate, 85%+ is ok, lower then 75% coverage is terrible
 
 jscoverage can recognise all options below:
 
-  --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
-
-  --covout [output report] # can be: summary, detail, json, html, lcov, default summary
-
-  --coverage [high,middle,low] # coverage level, default is: 90,70,30 , means 90% is high, 30% is low
-
-  --covinject [boolean] # switch if inject code for easytest(exports._get, _replace, _reset), `default is false`
+   --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
+   --covout [output report] # can be:  spec, list, tap, detail, html
+   --coverage [high,middle,low] # coverage level, default is: 90,70,30 , means 90% is high, 30% is low
+   --covinject [boolean] # switch if inject code for easytest(exports._ge,_replace, _reset), `default is false`
 
 default jscoverage will search .covignore in the project root
 
