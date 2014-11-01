@@ -123,7 +123,7 @@ function prepareMocha() {
     _ignore.push(new RegExp(v.replace(/\./g, '\\.').replace(/\*/g, '.*')));
   });
 
-  patch.setCovIgnore(_ignore);
+  patch.setCovIgnore(_ignore, argv.overrideIgnore ? true : false);
 }
 
 var jscoverage = require('./lib/jscoverage');
@@ -270,10 +270,10 @@ exports.coverageStats = function () {
     stats[file] = {
       lineSloc: lineTotal,
       lineHits: lineHits,
-      lineCoverage: lineTotal ? fixData(lineHits / lineTotal) : 0,
+      lineCoverage: lineTotal ? fixData(lineHits / lineTotal) : 1,
       branchSloc: branchTotal,
       branchHits: branchHits,
-      branchCoverage: branchTotal ? fixData(branchHits / branchTotal) : 0,
+      branchCoverage: branchTotal ? fixData(branchHits / branchTotal) : 1,
       branches: branchesMap
     };
   }

@@ -48,12 +48,15 @@ the cmd above means:
   * jscoverage will switch the colorful output:  90%+ is greate, 85%+ is ok, lower then 75% coverage is terrible
 
 jscoverage can recognise all options below:
+
 ```
  --covignore [filepath] # like gitignore, tell jscoverage to ignore these files
+ --overrideIgnore [boolean] # set if override the build-in ignore rules
  --covout [output report] # can be:  spec, list, tap, detail, html
  --coverage [high,middle,low] # coverage level, default is: 90,70,30 , means 90% is high, 30% is low
  --covinject [boolean] # switch if inject code for easytest(exports._get, exports._replace, exports._reset)
 ```
+
 default jscoverage will search .covignore in the project root
 
 ### using jscoverage as cli command

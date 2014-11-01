@@ -1,5 +1,5 @@
 exports.formatCoverage = function (n) {
-  var str = Math.floor(n * 100) + '%';
+  var str = Math.floor(n * 10000)/100 + '%';
   return str;
 };
 
