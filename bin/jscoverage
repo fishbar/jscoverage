@@ -55,7 +55,7 @@ try {
         });
       }
       count ++;
-      var destFile = path.join(dest, file.substr(source.length));
+      var destFile = path.join(dest, file.split(path.sep).pop());
       if (flag) {
         // copy exclude file
         fs.save(destFile, fs.readFileSync(file));
