@@ -41,7 +41,7 @@ try {
     jscoverage.processFile(source, dest);
   } else {
     var count = 0;
-    fs.walk(source, function (err, file, done) {
+    fs.walk(source, /\.(js|coffee)$/, function (err, file, done) {
       if (err) {
         console.log(err);
         return done;
