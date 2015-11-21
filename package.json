@@ -1,6 +1,6 @@
 {
   "name": "jscoverage",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "description": "a javascript coverage tool, can be used in node dev, and browser side js dev",
   "main": "index.js",
   "bin": {
@@ -10,20 +10,20 @@
     "test": "./node_modules/mocha/bin/_mocha -t 60000 -r ./index.js -R spec --covinject true test/"
   },
   "engines": {
-    "node" : ">=0.8"
+    "node": ">=0.8"
   },
-  "dependencies" : {
-    "uglify-js" : "2.4.15",
-    "optimist" : "0.3.1",
-    "xfs" : "0.1.8",
+  "dependencies": {
+    "coffee-script": "*",
+    "commander": "^2.6.0",
+    "debug": "~1.0.3",
     "ejs": "1.0.0",
-    "debug": "1.0.3",
-    "coffee-script": "*"
+    "optimist": "^0.6.1",
+    "uglify-js": "~2.4.15",
+    "xfs": "~0.1.8"
   },
-  "devDependencies" : {
-    "mocha" : "*",
-    "expect.js" : "*",
-    "xfs" : "*"
+  "devDependencies": {
+    "mocha": "*",
+    "expect.js": "*"
   },
   "repository": {
     "type": "git",
@@ -38,8 +38,11 @@
     "tool"
   ],
   "author": "fish <zhengxinlin@gmail.com>, kate.sf <kate.sf@taobao.com>",
-  "contributors":[
-    { "name": "christineRR", "email": "rongkunli1215@gmail.com" }
+  "contributors": [
+    {
+      "name": "christineRR",
+      "email": "rongkunli1215@gmail.com"
+    }
   ],
   "license": "MIT"
 }

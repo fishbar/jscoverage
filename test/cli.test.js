@@ -9,7 +9,7 @@ var exec = require('child_process').exec, child;
 var path = require('path');
 var originArgv = JSON.parse(JSON.stringify(process.argv));
 var origCwd = process.cwd();
-var fs = require('fs');
+var fs = require('xfs');
 var expect = require('expect.js');
 
 describe('test cli commands', function () {
@@ -64,6 +64,17 @@ describe('test cli commands', function () {
         expect(error).to.be(null);
         expect(stdout).to.be.empty();
         expect(stderr).to.be.empty();
+        done();
+      });
+    });
+    it('should ok when process dir', function (done) {
+      exec('../bin/jscoverage ./dir/a ./dir/test', function (error, stdout, stderr) {
+        expect(error).to.be(null);
+        expect(stdout).to.match(/process files: \d+/);
+        expect(stderr).to.be.empty();
+        expect(fs.existsSync('./dir/.git/test.js')).to.not.be.ok();
+        expect(fs.existsSync('./dir/.DS_Store')).to.not.be.ok();
+        fs.sync().rm('./dir/test');
         done();
       });
     });

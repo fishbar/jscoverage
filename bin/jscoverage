@@ -41,6 +41,8 @@ try {
     jscoverage.processFile(source, dest);
   } else {
     var count = 0;
+    source = path.join(process.cwd(), source);
+    dest = path.join(process.cwd(), dest);
     fs.walk(source, function (err, file, done) {
       if (err) {
         console.log(err);

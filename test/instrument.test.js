@@ -1,7 +1,9 @@
 var testMod = require('../lib/instrument.js');
 var expect = require('expect.js');
+var fs = require('fs');
+var path = require('path');
 
-describe('reporter/util.js', function () {
+describe('reporter/instrument.js', function () {
   var ist = new testMod();
   describe('util.getType(covlevel, coverage)', function () {
     it('should ok when ||', function () {
@@ -19,9 +21,14 @@ describe('reporter/util.js', function () {
       expect(ist.code).to.eql('if (_$jscmd("test", "cond", "1_4_14", a instanceof b)) {}');
     });
 
-    it('should ok when ? :', function () {
+    it('should ok when ? : 1', function () {
       ist.process('test', 'var a = b ? c : d;');
       expect(ist.code).to.eql('_$jscmd("test", "line", 1);\n\nvar a = b ? _$jscmd("test", "cond", "1_12_1", c) : _$jscmd("test", "cond", "1_16_1", d);');
+    });
+
+    it.skip('test multiline protect', function () {
+      ist.process('test', fs.readFileSync(path.join(__dirname, './dir/multiline.js')).toString());
+      // expect(ist.code).to.eql('_$jscmd("test", "line", 1);\n\nvar a = b ? _$jscmd("test", "cond", "1_12_1", c) : _$jscmd("test", "cond", "1_16_1", d);');
     });
   });
 });
