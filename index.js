@@ -210,6 +210,48 @@ exports.processFile = function (source, dest, option) {
   fs.writeFileSync(dest, content);
 };
 
+/**
+ * processDir, instrument directory
+ * @sync
+ * @param  {Path} source  absolute Path
+ * @param  {Path} dest    absolute Path
+ * @param  {Object} option  [description]
+ */
+exports.processDir = function (source, dest, option) {
+  var count = 0;
+  var exclude = option.exclude;
+
+  fs.walk(source, function (err, file, done) {
+    if (err) {
+      return done(err);
+    }
+
+    var flag = false;
+    if (exclude) {
+      for(var v in exclude)
+        if (v.test(file)) {
+          flag = true;
+          break;
+        }
+    }
+    count++;
+    var destFile = path.join(dest, file.substr(source.length));
+    if (flag) {
+      // copy exclude file
+      fs.save(destFile, fs.readFileSync(file));
+    } else {
+      exports.processFile(file, destFile);
+    }
+
+    done();
+  }, function (err) {
+    if (err) {
+      return console.log(err);
+    }
+    console.log('process files:', count);
+  });
+}
+
 function fixData(num) {
   return Math.round(num * 10000) / 10000;
 }
