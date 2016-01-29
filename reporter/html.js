@@ -138,8 +138,9 @@ function map(cov, stats) {
  */
 
 function coverage(filename, data, stats) {
+  var filepath = path.relative(process.cwd(), filename).split(path.sep).join('/');
   var ret = {
-    filename: filename,
+    filename: filepath,
     lineCoverage: stats.lineCoverage,
     lineHits: stats.lineHits,
     lineMisses: stats.lineSloc - stats.lineHits,
