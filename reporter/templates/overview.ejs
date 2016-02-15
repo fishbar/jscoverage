@@ -1,21 +1,31 @@
 <h1 id="overview"><%= cov.instrumentation %></h1>
 <div id="stats">
-  <div class="linecoverage">
+  <div>
+    Statements
+    <span class="linecov <%= coverageClass(cov.statementCoverage) %>">
+      [<%= cov.statementCoverage %>%]
+    </span>
+    <span><%= cov.statementHits %>/<%= cov.statementTotal %><span>
+  </div>
+  <div>
+    Branches
+    <span class="branchcov <%= coverageClass(cov.branchCoverage) %>">
+      [<%= cov.branchCoverage %>%]
+    </span>
+    <span><%= cov.branchHits %>/<%= cov.branchTotal %></span>
+  </div>
+  <div>
+    Functions
+    <span class="linecov <%= coverageClass(cov.functionCoverage) %>">
+      [<%= cov.functionCoverage %>%]
+    </span>
+    <span><%= cov.functionHits %>/<%= cov.functionTotal %><span>
+  </div>
+  <div>
+    Lines
     <span class="linecov <%= coverageClass(cov.lineCoverage) %>">
       [<%= cov.lineCoverage %>%]
     </span>
-    <span><%= cov.lineHits %>/<%= cov.lineSloc %><span>
-    <span class="misses">
-      <%= cov.lineMisses %>
-    </span>
-  </div>
-  <div class="branchcoverage">
-    <span class="branchcov <%= coverageClass(cov.lineCoverage) %>">
-      [<%= cov.branchCoverage %>%]
-    </span>
-    <span><%= cov.branchHits %>/<%= cov.branchSloc %></span>
-    <span class="misses">
-      <%= cov.branchMisses %>
-    </span>
+    <span><%= cov.lineHits %>/<%= cov.lineTotal %><span>
   </div>
 </div>

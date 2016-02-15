@@ -60,7 +60,7 @@ exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
     formatCoverage:utils.formatCoverage,
     filename: path.join(__dirname, './templates/cached.ejs')
   });
-  fs.sync().save(process.cwd() + '/covreporter/overview.js',
+  fs.sync().save(process.cwd() + '/covreporter/files/overview.js',
     'displayFile(' + JSON.stringify(overview) + ');');
 
   result.files.forEach(function (file) {
@@ -71,7 +71,7 @@ exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
       formatCoverage:utils.formatCoverage,
       cov: covClass
     });
-    fs.sync().save(process.cwd() + '/covreporter/' + file.filename,
+    fs.sync().save(process.cwd() + '/covreporter/files/' + file.filename,
       'displayFile(' + JSON.stringify(ff) + ');');
   });
 
@@ -87,43 +87,62 @@ exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
  * @api private
  */
 
-function map(cov, stats) {
+function map(covs, stats) {
   var ret = {
-    lineSloc: 0,
+    lineTotal: 0,
     lineHits: 0,
-    lineMisses: 0,
-    lineCoverage: 1,
-    branchSloc: 0,
+    lineCoverage: 0,
+    branchTotal: 0,
     branchHits: 0,
-    branchMisses: 0,
-    branchCoverage: 1,
+    branchCoverage: 0,
+    statementHits: 0,
+    statementTotal: 0,
+    statementCoverage: 0,
+    functionHits: 0,
+    functionTotal: 0,
+    functionCoverage: 0,
     files: []
   };
+  var cov;
 
-  for (var filename in cov) {
-    if (!cov[filename] || !cov[filename].length) {
+  for (var filename in covs) {
+    cov = covs[filename];
+    if (!cov) {
       continue;
     }
-    var data = coverage(filename, cov[filename], stats[filename]);
+    var data = coverage(filename, cov, stats[filename]);
     ret.files.push(data);
+
     ret.lineHits += data.lineHits;
-    ret.lineMisses += data.lineMisses;
-    ret.lineSloc += data.lineSloc;
+    ret.lineTotal += data.lineTotal;
+
     ret.branchHits += data.branchHits;
-    ret.branchMisses += data.branchMisses;
-    ret.branchSloc += data.branchSloc;
+    ret.branchTotal += data.branchTotal;
+
+    ret.functionHits += data.functionHits;
+    ret.functionTotal += data.functionTotal;
+
+    ret.statementHits += data.statementHits;
+    ret.statementTotal += data.statementTotal;
   }
 
   ret.files.sort(function(a, b) {
     return a.filename.localeCompare(b.filename);
   });
 
-  if (ret.lineSloc > 0) {
-    ret.lineCoverage = Math.round(ret.lineHits / ret.lineSloc * 10000) / 100;
+  if (ret.lineTotal > 0) {
+    ret.lineCoverage = Math.round(ret.lineHits / ret.lineTotal * 10000) / 100;
   }
-  if (ret.branchSloc > 0) {
-    ret.branchCoverage = Math.round(ret.branchHits / ret.branchSloc * 10000) / 100;
+  if (ret.branchTotal > 0) {
+    ret.branchCoverage = Math.round(ret.branchHits / ret.branchTotal * 10000) / 100;
   }
+  if (ret.statementTotal > 0) {
+    ret.statementCoverage = Math.round(ret.statementHits / ret.statementTotal * 10000) / 100;
+  }
+  if (ret.functionTotal > 0) {
+    ret.functionCoverage = Math.round(ret.functionHits / ret.functionTotal * 10000) / 100;
+  }
+
   return ret;
 }
 
@@ -138,21 +157,13 @@ function map(cov, stats) {
  */
 
 function coverage(filename, data, stats) {
-  var ret = {
-    filename: filename,
-    lineCoverage: stats.lineCoverage,
-    lineHits: stats.lineHits,
-    lineMisses: stats.lineSloc - stats.lineHits,
-    lineSloc: stats.lineSloc,
-    branchCoverage: stats.branchCoverage,
-    branchHits: stats.branchHits,
-    branchMisses: stats.branchSloc - stats.branchHits,
-    branchSloc: stats.branchSloc,
-    source: []
-  };
+  var ret = {source: []};
+  Object.keys(stats).forEach(function (key) {
+    ret[key] = stats[key];
+  });
   data.source.forEach(function(line, num){
     num++;
-    var branches = stats.branches[num];
+    var branches = stats.branchesMap[num];
     var splits = [];
     if (branches) {
       branches.forEach(function (v) {
@@ -181,7 +192,7 @@ function coverage(filename, data, stats) {
     }
     ret.source[num] = {
       source: line,
-      coverage: data[num] === undefined ? '' : data[num],
+      coverage: data.lines[num] === undefined ? '' : data.lines[num],
       branches: branches && branches.length ? true : false
     };
   });

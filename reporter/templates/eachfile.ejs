@@ -1,24 +1,36 @@
 <div class="file">
   <h2 id="<%- file.filename %>"> <%- file.filename %></h2>
   <div id="stats">
-    <div class="linecoverage">
-      <span class="linecov <%= coverageClass(file.lineCoverage) %>">
-        [<%= formatCoverage(file.lineCoverage) %>]
+
+    <div>
+      Statements
+      <span class="statementcov <%= coverageClass(file.statementCoverage) %>">
+        <%= formatCoverage(file.statementCoverage) %>
       </span>
-      <span><%= file.lineHits %>/<%= file.lineSloc %><span>
-      <span class="misses">
-        <%= file.lineMisses %>
-      </span>
+      <span>[<%= file.statementHits %>/<%= file.statementTotal %>]</span>
     </div>
-    <div class="branchcoverage">
+    <div>
+      Branches
       <span class="branchcov <%= coverageClass(file.lineCoverage) %>">
-        [<%= formatCoverage(file.branchCoverage) %>]
+        <%= formatCoverage(file.branchCoverage) %>
       </span>
-      <span><%= file.branchHits %>/<%= file.branchSloc %></span>
-      <span class="misses">
-        <%= file.branchMisses %>
-      </span>
+      <span>[<%= file.branchHits %>/<%= file.branchTotal %>]</span>
     </div>
+    <div>
+      Functions
+      <span class="statementcov <%= coverageClass(file.statementCoverage) %>">
+        <%= formatCoverage(file.statementCoverage) %>
+      </span>
+      <span>[<%= file.statementHits %>/<%= file.statementTotal %>]</span>
+    </div>
+    <div>
+      Lines
+      <span class="linecov <%= coverageClass(file.lineCoverage) %>">
+        <%= formatCoverage(file.lineCoverage) %>
+      </span>
+      <span>[<%= file.lineHits %>/<%= file.lineTotal %>]<span>
+    </div>
+
   </div>
   <table id="source">
     <thead>

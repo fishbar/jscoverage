@@ -18,17 +18,17 @@ describe('test cli commands', function () {
   });
 
   after(function () {
-    fs.unlink(path.join(__dirname, './dir/a1-cov.js'), function(err){});
-    fs.unlink(path.join(__dirname, './dir/error-cov.js'), function(err){});
-    fs.unlink(path.join(__dirname, './dir/shebang-cov.js'), function(err){});
-    fs.unlink(path.join(__dirname, './dir/shebang_withbom-cov.js'), function(err){});
-    fs.unlink(path.join(__dirname, './dir/test-cov.coffee'), function(err){});
+    fs.unlink(path.join(__dirname, './res/a1-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './res/error-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './res/shebang-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './res/shebang_withbom-cov.js'), function(err){});
+    fs.unlink(path.join(__dirname, './res/test-cov.coffee'), function(err){});
     process.chdir(origCwd);
   });
 
   describe('jscoverage file', function () {
     it('should ok cli jscoverage process a file', function (done) {
-      exec('../bin/jscoverage dir/a1.js --covout=none', function (error, stdout, stderr) {
+      exec('../bin/jscoverage res/a1.js --covout=none', function (error, stdout, stderr) {
         expect(error).to.be(null);
         expect(stdout).to.be.empty();
         expect(stderr).to.be.empty();
@@ -36,7 +36,7 @@ describe('test cli commands', function () {
       });
     });
     it('should ok cli jscoverage process a file with shebang', function (done) {
-      exec('../bin/jscoverage dir/shebang.js', function (error, stdout, stderr) {
+      exec('../bin/jscoverage res/shebang.js', function (error, stdout, stderr) {
         expect(error).to.be(null);
         expect(stdout).to.be.empty();
         expect(stderr).to.be.empty();
@@ -44,7 +44,7 @@ describe('test cli commands', function () {
       });
     });
     it('should ok cli jscoverage process a file with shebang bom', function (done) {
-      exec('../bin/jscoverage dir/shebang_withbom.js', function (error, stdout, stderr) {
+      exec('../bin/jscoverage res/shebang_withbom.js', function (error, stdout, stderr) {
         expect(error).to.be(null);
         expect(stdout).to.be.empty();
         expect(stderr).to.be.empty();
@@ -52,29 +52,31 @@ describe('test cli commands', function () {
       });
     });
     it('should catch error when parse file error', function (done) {
-      exec('../bin/jscoverage dir/error.js', function (error, stdout, stderr) {
+      exec('../bin/jscoverage res/error.js', function (error, stdout, stderr) {
         expect(error).to.be(null);
-        expect(stdout).to.match(/Unexpected token/);
+        expect(stdout).to.match(/Unexpected identifier/);
         expect(stderr).to.be.empty();
         done();
       });
     });
-    it('should ok when parse coffee script', function (done) {
-      exec('../bin/jscoverage dir/test.coffee', function (error, stdout, stderr) {
+
+    it.skip('should ok when parse coffee script', function (done) {
+      exec('../bin/jscoverage res/test.coffee', function (error, stdout, stderr) {
         expect(error).to.be(null);
         expect(stdout).to.be.empty();
         expect(stderr).to.be.empty();
         done();
       });
     });
-    it('should ok when process dir', function (done) {
-      exec('../bin/jscoverage ./dir/a ./dir/test', function (error, stdout, stderr) {
+
+    it('should ok when process res', function (done) {
+      exec('../bin/jscoverage ./res/a ./res/test', function (error, stdout, stderr) {
         expect(error).to.be(null);
         expect(stdout).to.match(/process files: \d+/);
         expect(stderr).to.be.empty();
-        expect(fs.existsSync('./dir/.git/test.js')).to.not.be.ok();
-        expect(fs.existsSync('./dir/.DS_Store')).to.not.be.ok();
-        fs.sync().rm('./dir/test');
+        expect(fs.existsSync('./res/.git/test.js')).to.not.be.ok();
+        expect(fs.existsSync('./res/.DS_Store')).to.not.be.ok();
+        fs.sync().rm('./res/test');
         done();
       });
     });

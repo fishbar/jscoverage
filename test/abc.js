@@ -4,7 +4,9 @@
  * Create   : 2014-04-10 16:23:23
  * CopyRight 2014 (c) Fish And Other Contributors
  */
-var cde = require('./cde');
+var cde = {
+  a: function() {}
+}
 var a = 1;
 var b = 2;
 var c = 3;
@@ -27,6 +29,23 @@ function abc() {
   testSwitch();
   return tmp + c;
 }
+
+for (var i = 0; i < 10; i++) {
+
+}
+for (var i = 0; i < 10; i++) ;
+for (
+  var i = 0;
+  i < 10;
+  i++
+)
+  i++;
+
+for (var i in {});
+
+for (var i
+  in {})
+  ;
 
 function testSwitch(act) {
   var res = [

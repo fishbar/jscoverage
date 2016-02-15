@@ -30,7 +30,7 @@ describe("index.js", function () {
       fs.unlinkSync(dest);
     });
     it('should throw error when path not file', function () {
-      var source = path.join(__dirname, './dir');
+      var source = path.join(__dirname, './res');
       var dest = path.join(__dirname, './abc.cov.js');
       var err;
       try {
@@ -43,10 +43,10 @@ describe("index.js", function () {
     it('should throw error when path is a socket file', function (done) {
       var net = require('net');
       var serv = net.createServer(function(client){});
-      var ff = path.join(__dirname, './dir/a.sock');
+      var ff = path.join(__dirname, './res/a.sock');
       serv.listen(ff, function (err) {
         try {
-          index.processFile(ff, path.join(__dirname, './dir/sock-cov'));
+          index.processFile(ff, path.join(__dirname, './res/sock-cov'));
         } catch (e) {
           expect(e.message).to.match(/not a regular file/);
         }

@@ -10,6 +10,7 @@ exports.process = function (_$jscoverage, stats, covlevel, name, utils) {
   console.log('\n');
   console.log(colorful('%s%s', 'DEFAULT'), indent(), 'Coverage result');
   indents ++;
+  console.log(stats);
   var files = Object.keys(stats);
   var maxFileLength = maxStr(files);
   files.forEach(function (file) {

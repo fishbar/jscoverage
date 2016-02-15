@@ -15,7 +15,7 @@ var rptUtil = require('./reporter/util');
 var cmd = argv['$0'];
 var MODE_MOCHA = false;
 process.__MOCHA_PREPARED = false;
-var FLAG_LOCK = false;
+process.__JSC_REPORTER = false;
 if (/mocha/.test(cmd)) {
   MODE_MOCHA = true;
 }
@@ -57,42 +57,40 @@ function prepareMocha() {
    */
   var supportReporters = ['list', 'spec', 'tap'];
   process.nextTick(function () {
-    try {
-      after(function () {
-        if (FLAG_LOCK) {
-          return;
-        }
-        FLAG_LOCK = true;
-        if (typeof _$jscoverage === 'undefined') {
-          return;
-        }
-        try {
-          if (argv.covout === 'none') {
-            return;
-          }
-          if (!argv.covout) {
-            var mochaR = argv.reporter || argv.R;
-            if (supportReporters.indexOf(mochaR) !== -1) {
-              argv.covout = mochaR;
-            } else {
-              argv.covout = 'list';
-            }
-          }
-          var reporter;
-          if (/^\w+$/.test(argv.covout)) {
-            reporter = require('./reporter/' + argv.covout);
-          } else {
-            reporter = require(argv.covout);
-          }
-          reporter.process(_$jscoverage, exports.coverageStats(), covlevel, COV_REPORT_NAME, rptUtil);
-        } catch (e) {
-          console.error('jscoverage reporter error', e, e.stack);
-        }
-      });
-    } catch (e) {
-      // do nothing
+    if (process.__JSC_REPORTER) {
+      return;
     }
+    process.__JSC_REPORTER = true;
+    after(function () {
+      if (typeof _$jscoverage === 'undefined') {
+        return;
+      }
+      try {
+        if (argv.covout === 'none') {
+          return;
+        }
+        if (!argv.covout) {
+          var mochaR = argv.reporter || argv.R;
+          if (supportReporters.indexOf(mochaR) !== -1) {
+            argv.covout = mochaR;
+          } else {
+            argv.covout = 'list';
+          }
+        }
+        var reporter;
+        if (/^\w+$/.test(argv.covout)) {
+          reporter = require('./reporter/' + argv.covout);
+        } else {
+          reporter = require(argv.covout);
+        }
+        reporter.process(_$jscoverage, exports.coverageStats(), covlevel, COV_REPORT_NAME, rptUtil);
+      } catch (e) {
+        console.error('jscoverage reporter error', e, e.stack);
+      }
+    });
   });
+
+
   if (argv.covinject) {
     debug('covinject enabled');
     patch.enableInject(true);
@@ -213,6 +211,20 @@ exports.processFile = function (source, dest, option) {
 function fixData(num) {
   return Math.round(num * 10000) / 10000;
 }
+
+/**
+ * parseKey
+ *   line:c0_line:c1
+ */
+function parseKey(key) {
+  var tmp = key.split('_');
+  var res = [];
+  tmp.forEach(function (v, i) {
+    var tt = v.split(':');
+    res.push([Number(tt[0]), Number(tt[1])]);
+  });
+  return res;
+}
 /**
  * sum the coverage rate
  * @public
@@ -224,57 +236,110 @@ exports.coverageStats = function () {
   var lineHits;
   var branchTotal;
   var branchHits;
+  var functionTotal;
+  var functionHits;
+  var statementTotal;
+  var statementHits;
+
+  var lines, branches, functions, statements;
+
   var n, len;
   var stats = {};
-  var branches, branchesMap, branch;
-  var line, start, offset;
+  var branchesMap, branch;
+  var lineStart, lineEnd;
   if (typeof _$jscoverage === 'undefined') {
     return;
   }
   for (var i in _$jscoverage) {
     file = i;
     tmp = _$jscoverage[i];
-    if (!tmp.length) {
-      continue;
-    }
     // reset the counters;
     lineTotal = lineHits = 0;
     branchTotal = branchHits = 0;
+    functionTotal = functionHits = 0;
+    statementTotal = statementHits = 0;
 
-    for (n = 0, len = tmp.length; n < len; n++) {
-      if (tmp[n] !== undefined) {
+    lines = tmp.lines;
+    for (n = 0, len = lines.length; n < len; n++) {
+      if (lines[n] !== null && lines[n] !== undefined) {
         lineTotal ++;
-        if (tmp[n] > 0) {
+        if (lines[n] > 0) {
           lineHits ++;
         }
       }
     }
     // calculate the branches coverage
-    branches = tmp.condition;
+    branches = tmp.branches;
     branchesMap = {};
     for (n in branches) {
+      if (!branches.hasOwnProperty(n)) {
+        continue;
+      }
       if (branches[n] === 0) {
-        branch = n.split('_');
-        line = branch[0];
-        start = parseInt(branch[1], 10);
-        offset = parseInt(branch[2], 10);
-        if (!branchesMap[line]) {
-          branchesMap[line] = [];
+        branch = parseKey(n);
+        lineStart = branch[0][0];
+        lineEnd = branch[1][0];
+
+        if (!branchesMap[lineStart]) {
+          branchesMap[lineStart] = [];
         }
-        branchesMap[line].push([start, offset]);
+        if (!branchesMap[lineEnd]) {
+          branchesMap[lineEnd] = [];
+        }
+        if (lineStart === lineEnd) {
+          branchesMap[lineStart].push([branch[0][1], branch[1][1]]);
+        } else {
+          branchesMap[lineStart].push([branch[0][1], null]);
+          branchesMap[lineEnd].push([null, branch[1][1]]);
+        }
       } else {
         branchHits ++;
       }
       branchTotal ++;
     }
+    statements = tmp.statements;
+    for (n in statements) {
+      if (!statements.hasOwnProperty(n)) {
+        continue;
+      }
+      if (statements[n] === 0) {
+        // no covered
+      } else {
+        statementHits ++;
+      }
+      statementTotal ++;
+    }
+    functions = tmp.functions;
+    for (n in functions) {
+      if (!functions.hasOwnProperty(n)) {
+        continue;
+      }
+      if (branches[n] === 0) {
+        // no covered
+      } else {
+        functionHits ++;
+      }
+      functionTotal ++;
+    }
+
     stats[file] = {
-      lineSloc: lineTotal,
+      filename: file,
+      lineTotal: lineTotal,
       lineHits: lineHits,
-      lineCoverage: lineTotal ? fixData(lineHits / lineTotal) : 1,
-      branchSloc: branchTotal,
+      lineCoverage: lineTotal ? fixData(lineHits / lineTotal) : 0,
+
+      branchTotal: branchTotal,
       branchHits: branchHits,
-      branchCoverage: branchTotal ? fixData(branchHits / branchTotal) : 1,
-      branches: branchesMap
+      branchCoverage: branchTotal ? fixData(branchHits / branchTotal) : 0,
+      branchesMap: branchesMap,
+
+      statementTotal: statementTotal,
+      statementHits: statementHits,
+      statementCoverage: statementTotal ? fixData(statementHits / statementTotal) : 0,
+
+      functionTotal: functionTotal,
+      functionHits: functionHits,
+      functionCoverage: functionTotal ? fixData(functionHits / functionTotal) : 0
     };
   }
   return stats;
@@ -293,9 +358,10 @@ exports.getLCOV = function () {
   if (typeof _$jscoverage === 'undefined') {
     return;
   }
+  // console.log(_$jscoverage);
   Object.keys(_$jscoverage).forEach(function (file) {
     lcov += 'SF:' + file + '\n';
-    tmp = _$jscoverage[file];
+    tmp = _$jscoverage[file].lines;
     if (!tmp.length) {
       return;
     }

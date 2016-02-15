@@ -5,7 +5,7 @@ install:
 	@npm install
 
 test: install
-	@$(MOCHA) -t 60000 -r ./index.js -R spec --covinject true $(TEST)
+	@$(MOCHA) -t 60000 -R spec --covinject true $(TEST)
 
 test-cov: install
 	@$(MOCHA) -t 60000 -r ./index.js -R spec   --overrideIgnore=true --covout=html --covinject=true $(TEST)

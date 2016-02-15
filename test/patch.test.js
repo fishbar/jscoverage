@@ -6,7 +6,7 @@
  */
 var patch = require('../lib/patch');
 var expect = require('expect.js');
-var checkModule = patch._get('checkModule');
+var checkModule = patch.checkModule;
 
 describe('patch.js', function () {
   describe('checkModule()', function () {
@@ -30,7 +30,7 @@ describe('patch.js', function () {
 
   describe('require()', function () {
     it('should be ok when require a json file', function () {
-      var a = require('./dir/test.json');
+      var a = require('./res/test.json');
       expect(a.test).to.be(1);
     });
   });
