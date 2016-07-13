@@ -203,7 +203,7 @@ exports.processFile = function (source, dest, option) {
       filename: source
     });
   }
-  content = this.process(source, content);
+  content = exports.process(source, content);
   if (sheBang) {
     content = sheBang + content;
   }
