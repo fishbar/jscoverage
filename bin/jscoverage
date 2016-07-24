@@ -39,7 +39,12 @@ try {
   if (sourceStat.isFile()) {
     jscoverage.processFile(source, dest);
   } else {
-    jscoverage.processDir(source, dest, {exclude: exclude});
+    jscoverage.processDir(source, dest, {exclude: exclude}, function(err, count) {
+      if (err) {
+        return console.log(err);
+      }
+      console.log('process files:', count);
+    });
   }
 } catch (e) {
   console.log('[ERROR]', e.toString());

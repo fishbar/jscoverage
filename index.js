@@ -166,9 +166,12 @@ exports.process = jscoverage.process;
  * @param  {Path} source  absolute Path
  * @param  {Path} dest    absolute Path
  */
-exports.processFile = function (source, dest) {
+exports.processFile = function (source, dest, callback) {
+  callback = callback || function(){}
+
   var content;
   var stats;
+
   // test source is file or dir, or not a file
   try {
     stats = fs.statSync(source);
@@ -207,6 +210,8 @@ exports.processFile = function (source, dest) {
     content = sheBang + content;
   }
   fs.writeFileSync(dest, content);
+
+  callback()
 };
 
 /**
@@ -216,7 +221,12 @@ exports.processFile = function (source, dest) {
  * @param  {Path} dest    absolute Path
  * @param  {Object} option  [description]
  */
-exports.processDir = function (source, dest, option) {
+exports.processDir = function (source, dest, option, callback) {
+  if(option instanceof Function) {
+    callback = option
+    option = null
+  }
+
   var count = 0;
   var exclude = option && option.exclude;
 
@@ -238,16 +248,12 @@ exports.processDir = function (source, dest, option) {
     if (flag) {
       // copy exclude file
       fs.save(destFile, fs.readFileSync(file));
+      done();
     } else {
-      exports.processFile(file, destFile);
+      exports.processFile(file, destFile, done);
     }
-
-    done();
-  }, function (err) {
-    if (err) {
-      return console.log(err);
-    }
-    console.log('process files:', count);
+  }, function(err) {
+    callback(err, count)
   });
 }
 
