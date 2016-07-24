@@ -165,9 +165,8 @@ exports.process = jscoverage.process;
  * @sync
  * @param  {Path} source  absolute Path
  * @param  {Path} dest    absolute Path
- * @param  {Object} option  [description]
  */
-exports.processFile = function (source, dest, option) {
+exports.processFile = function (source, dest) {
   var content;
   var stats;
   // test source is file or dir, or not a file
@@ -219,7 +218,7 @@ exports.processFile = function (source, dest, option) {
  */
 exports.processDir = function (source, dest, option) {
   var count = 0;
-  var exclude = option.exclude;
+  var exclude = option && option.exclude;
 
   fs.walk(source, function (err, file, done) {
     if (err) {
