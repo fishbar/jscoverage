@@ -30,9 +30,8 @@ if (!dest) {
 }
 
 if (exclude) {
-  exclude = exclude.split(',');
-  exclude.forEach(function (v, i, a) {
-    a[i] = new RegExp(v.replace(/\./, '\\.').replace(/\*/g, '.*'));
+  exclude = exclude.split(',').map(function (v) {
+    return new RegExp(v.replace(/\./, '\\.').replace(/\*/g, '.*'));
   });
 }
 try {
@@ -40,30 +39,7 @@ try {
   if (sourceStat.isFile()) {
     jscoverage.processFile(source, dest);
   } else {
-    var count = 0;
-    fs.walk(source, function (err, file, done) {
-      if (err) {
-        console.log(err);
-        return done;
-      }
-      var flag = false;
-      if (exclude) {
-        exclude.forEach(function (v) {
-          if (v.test(file)) {
-            flag = true;
-          }
-        });
-      }
-      count ++;
-      var destFile = path.join(dest, file.substr(source.length));
-      if (flag) {
-        // copy exclude file
-        fs.save(destFile, fs.readFileSync(file));
-      } else {
-        jscoverage.processFile(file, destFile);
-      }
-      done();
-    }, function (err) {
+    jscoverage.processDir(source, dest, {exclude: exclude}, function(err, count) {
       if (err) {
         return console.log(err);
       }

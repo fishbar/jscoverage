@@ -165,11 +165,13 @@ exports.process = jscoverage.process;
  * @sync
  * @param  {Path} source  absolute Path
  * @param  {Path} dest    absolute Path
- * @param  {Object} option  [description]
  */
-exports.processFile = function (source, dest, option) {
+exports.processFile = function (source, dest, callback) {
+  callback = callback || function(){}
+
   var content;
   var stats;
+
   // test source is file or dir, or not a file
   try {
     stats = fs.statSync(source);
@@ -203,12 +205,57 @@ exports.processFile = function (source, dest, option) {
       filename: source
     });
   }
-  content = this.process(source, content);
+  content = exports.process(source, content);
   if (sheBang) {
     content = sheBang + content;
   }
   fs.writeFileSync(dest, content);
+
+  callback()
 };
+
+/**
+ * processDir, instrument directory
+ * @sync
+ * @param  {Path} source  absolute Path
+ * @param  {Path} dest    absolute Path
+ * @param  {Object} option  [description]
+ */
+exports.processDir = function (source, dest, option, callback) {
+  if(option instanceof Function) {
+    callback = option
+    option = null
+  }
+
+  var count = 0;
+  var exclude = option && option.exclude;
+
+  fs.walk(source, function (err, file, done) {
+    if (err) {
+      return done(err);
+    }
+
+    var flag = false;
+    if (exclude) {
+      for(var v in exclude)
+        if (v.test(file)) {
+          flag = true;
+          break;
+        }
+    }
+    count++;
+    var destFile = path.join(dest, file.substr(source.length));
+    if (flag) {
+      // copy exclude file
+      fs.save(destFile, fs.readFileSync(file));
+      done();
+    } else {
+      exports.processFile(file, destFile, done);
+    }
+  }, function(err) {
+    callback(err, count)
+  });
+}
 
 function fixData(num) {
   return Math.round(num * 10000) / 10000;
