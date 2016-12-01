@@ -18,7 +18,7 @@
     "xfs" : "0.1.8",
     "ejs": "1.0.0",
     "debug": "1.0.3",
-    "coffee-script": "*"
+    "coffee-script": ">=1.7.0"
   },
   "devDependencies" : {
     "mocha" : "*",
