@@ -36,16 +36,16 @@ the `detail` reporter will print the uncovered code in the console directly.
 
 ### using jscoverage with mocha
 
-full modelł:
+full modell:
 ```sh
 mocha -r jscoverage --covignore .covignore --covout=html --covinject=true --coverage=90,85,75 test
 ```
 the cmd above means:
   * mocha run test case with jscoverage module
-  * jscoverage will ignore files while list in .covignore file
+  * jscoverage will ignore files which are listed in .covignore file
   * jscoverage will output a report in html format
   * jscoverage will inject a group of function to your module.exports (_get, _set, _reset, _replace);
-  * jscoverage will switch the colorful output:  90%+ is greate, 85%+ is ok, lower then 75% coverage is terrible
+  * jscoverage will switch the colorful output:  90%+ is great, 85%+ is ok, lower then 75% coverage is terrible
 
 jscoverage can recognise all options below:
 
