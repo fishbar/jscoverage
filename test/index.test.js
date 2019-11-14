@@ -53,8 +53,7 @@ describe("index.js", function () {
         serv.close(done);
       });
     });
-    /*
-    it('should return an jsc convert dir', function (done) {
+    xit('should return an jsc convert dir', function (done) {
       var source = path.join(__dirname, './dir');
       var dest = path.join(__dirname, './dir-cov');
       index.processFile(source, dest);
@@ -65,7 +64,7 @@ describe("index.js", function () {
         done();
       });
     });
-    it('should ignore exclude', function (done) {
+    xit('should ignore exclude', function (done) {
       var source = path.join(__dirname, './dir');
       var dest = path.join(__dirname, './dir-cov');
       index.processFile(source, dest, ['a2', /\.md$/i]);
@@ -74,13 +73,10 @@ describe("index.js", function () {
         done();
       });
     });
-    */
-    it('should throw error when source and dest not currect', function () {
-      try {
+    it('should throw error when source and dest not correct', function () {
+      expect(function() {
         index.processFile();
-      } catch (e) {
-        expect(e.message).to.match(/path must be a string/);
-      }
+      }).to.throwException(TypeError);
     });
     it('should throw error when source and dest not currect', function () {
       function _empty() {
