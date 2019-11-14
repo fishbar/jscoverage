@@ -58,7 +58,7 @@ try {
       var destFile = path.join(dest, file.substr(source.length));
       if (flag) {
         // copy exclude file
-        fs.save(destFile, fs.readFileSync(file));
+        fs.writeFileSync(destFile, fs.readFileSync(file));
       } else {
         jscoverage.processFile(file, destFile);
       }
