@@ -16,7 +16,7 @@
     "uglify-js" : "2.4.15",
     "optimist" : "0.3.1",
     "xfs" : "0.1.8",
-    "ejs": "1.0.0",
+    "ejs": "3.1.6",
     "debug": "1.0.3",
     "coffee-script": "*"
   },
